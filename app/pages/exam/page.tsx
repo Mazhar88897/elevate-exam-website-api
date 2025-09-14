@@ -858,27 +858,27 @@ const Button = React.forwardRef<
 })
 Button.displayName = "Button"
 
-// Course data structure
+// Course data structure for mobile (simplified without sub-chapters)
 interface Option {
   text: string
   isCorrect: boolean
 }
 
-export interface Question {
+interface MobileQuestion {
   question: string
   options: string[]
   correctOption: string
   explanation: string
 }
 
-export interface Chapter {
+interface MobileChapter {
   name: string
-  questions: Question[]
+  questions: MobileQuestion[]
 }
 
-export interface Course {
+interface MobileCourse {
   courseName: string
-  chapters: Chapter[]
+  chapters: MobileChapter[]
 }
 
 
@@ -886,7 +886,7 @@ function QuizPageMobile() {
   // Course data
   const { openSupportModal } = useSupportModal()
 
-  const course: Course = {
+  const course: MobileCourse = {
     courseName: "Introduction to TypeScript",
     chapters: [
       {
