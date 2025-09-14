@@ -320,7 +320,12 @@ export function Sidebar({ className }: SidebarProps) {
     </div>
   );
  
-  const servicesSections = [
+  const servicesSections: {
+    title: string;
+    key: string;
+    color?: string;
+    items: ServiceItem[];
+  }[] = [
     
         {
       title: "Course Overview",
