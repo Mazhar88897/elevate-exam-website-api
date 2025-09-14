@@ -864,19 +864,19 @@ interface Option {
   isCorrect: boolean
 }
 
-interface Question {
+export interface Question {
   question: string
   options: string[]
   correctOption: string
   explanation: string
 }
 
-interface Chapter {
+export interface Chapter {
   name: string
   questions: Question[]
 }
 
-interface Course {
+export interface Course {
   courseName: string
   chapters: Chapter[]
 }
