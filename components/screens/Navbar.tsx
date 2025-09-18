@@ -237,7 +237,7 @@ export default function Navbar() {
 function Logo() {
   return (
     <div className="flex items-center">
-     <Image src="/logo.svg" alt="Logo" width={150} height={100} />
+     <Image src="/logo-t.jpg" alt="Logo" width={150} height={100} />
     </div>
   )
 }
