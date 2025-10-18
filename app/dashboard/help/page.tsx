@@ -7,23 +7,63 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckCircle2, HelpCircle, Mail, MessageSquare, Phone } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { HelpCircle, Mail, MessageSquare, Phone } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordioncustom"
+import toast from "react-hot-toast"
 
 export default function HelpPage() {
-  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+    subject: '',
+    topic: 'technical'
+  })
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (value: string) => {
+    setFormData(prev => ({ ...prev, topic: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/help_center/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send message. Please try again.')
+      }
+
+      // Show success toast
+      toast.success('Message sent successfully! Our support team will get back to you within 24 hours.')
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        message: '',
+        subject: '',
+        topic: 'technical'
+      })
+    } catch (err) {
+      // Show error toast
+      toast.error(err instanceof Error ? err.message : 'An error occurred. Please try again.')
+    } finally {
       setLoading(false)
-      setSubmitted(true)
-    }, 1500)
+    }
   }
 
   return (
@@ -51,59 +91,76 @@ export default function HelpPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {submitted ? (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertTitle className="text-green-800">Message Sent!</AlertTitle>
-                  <AlertDescription className="text-green-700">
-                    Thank you for reaching out. Our support team will get back to you within 24 hours.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Your Email</Label>
-                    <Input id="email" type="email"  placeholder="mk0906145@gmail.com" required />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Your Name</Label>
+                  <Input 
+                    id="name" 
+                    type="text" 
+                    placeholder="Enter your full name" 
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required 
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">Topic</Label>
-                    <Select defaultValue="technical">
-                      <SelectTrigger id="topic">
-                        <SelectValue placeholder="Select a topic" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technical">Technical Issue</SelectItem>
-                        <SelectItem value="billing">Billing Question</SelectItem>
-                        <SelectItem value="account">Account Help</SelectItem>
-                        <SelectItem value="course">Course Content</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Your Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email"  
+                    placeholder="mk0906145@gmail.com" 
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required 
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="Brief description of your issue" required />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="topic">Topic</Label>
+                  <Select value={formData.topic} onValueChange={handleSelectChange}>
+                    <SelectTrigger id="topic">
+                      <SelectValue placeholder="Select a topic" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical Issue</SelectItem>
+                      <SelectItem value="billing">Billing Question</SelectItem>
+                      <SelectItem value="account">Account Help</SelectItem>
+                      <SelectItem value="course">Course Content</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Please describe your issue in detail"
-                      className="min-h-[150px]"
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input 
+                    id="subject" 
+                    placeholder="Brief description of your issue" 
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required 
+                  />
+                </div>
 
-                  <div className="pt-2">
-                    <Button type="submit" className="w-full rounded-midborder-grey-300" disabled={loading}>
-                      {loading ? "Sending..." : "Send Message"}
-                    </Button>
-                  </div>
-                </form>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Please describe your issue in detail"
+                    className="min-h-[150px]"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <Button type="submit" className="w-full rounded-midborder-grey-300" disabled={loading}>
+                    {loading ? "Sending..." : "Send Message"}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
           </div>

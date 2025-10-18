@@ -169,7 +169,7 @@ export default function Component() {
                 return (
                   <div
                     key={index}
-                    className="flex flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3"
+                    className="flex hover:pointer flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
                     onClick={() => {
                       router.push(`/course/course-details`)
                     }}
@@ -183,7 +183,7 @@ export default function Component() {
             
             {hasMoreSubjects && (
               <div className="mt-9 text-center">
-                <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-[#ffd404] hover:pointer cursor-pointer">
+                <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
                   load more
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </div>
@@ -198,7 +198,7 @@ export default function Component() {
                 return (
                   <div
                     key={index}
-                    className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3"
+                    className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
                   >
                     {IconComponent && <IconComponent className="w-6 h-6" />}
                     <span className="text-base font-medium">{subject.name}</span>
@@ -209,7 +209,7 @@ export default function Component() {
             
             {hasMoreLibrary && (
               <div className="mt-9 text-center">
-                <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-[#ffd404] hover:pointer cursor-pointer">
+                <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
                   load more
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </div>

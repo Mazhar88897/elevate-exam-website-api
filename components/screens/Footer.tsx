@@ -4,21 +4,58 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { Facebook, Twitter, Instagram, Youtube } from "lucide-react"
+import { Facebook, Twitter, Instagram, Youtube, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { toast } from "react-hot-toast"
 
 import { CustomButton } from "@/components/pages/CustomButton"
-
+// import { Highlight } from "@/components/pages/Highlight"
 // Logo Component
+
+// import type React from "react"
+import { cn } from "@/lib/utils"
+
+// Newsletter form validation schema
+const newsletterSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+})
+
+type NewsletterFormData = z.infer<typeof newsletterSchema>
+
+interface HighlightProps {
+  children: React.ReactNode
+  className?: string
+  color?: string
+}
+
+export function Highlight({ children, className, color = "bg-yellow-300" }: HighlightProps) {
+  return (
+    <span className={cn("relative inline-block", className)}>
+      {/* The text content */}
+      <span className="relative z-10">{children}</span>
+
+      {/* The highlight background */}
+      <span
+        className={cn("absolute inset-0 -z-0 rounded-lg", color)}
+        style={{
+            bottom: "-0.05em", // Moves it slightly lower
+            top: "0.5em", // Reduces the height from the top
+            left: "-0.1em", // Brings highlight closer to text
+            right: "-0.1em", // Same as left for balance
+        }}
+      ></span>
+    </span>
+  )
+}
+
+
 function Logo() {
   return (
-    <Link href="/" className="flex items-center space-x-2">
-      {/* <div className="text-[#ffd404]">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 0L40 20L20 40L0 20L20 0Z" fill="currentColor" fillOpacity="0.2" />
-          <path d="M20 5L35 20L20 35L5 20L20 5Z" fill="currentColor" />
-        </svg>
-      </div> */}
-      <span className="text-white text-2xl font-bold">Elevate Exams</span>
+    <Link href="/" className="flex items-center space-x-2 text-black text-4xl font-bold">
+     
+      <Highlight> Elevate Exams</Highlight>
     </Link>
   )
 }
@@ -77,28 +114,77 @@ function FooterLinks({ title, links }: FooterLinksProps) {
 
 // Newsletter Form Component
 function NewsletterForm() {
-  const [email, setEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm<NewsletterFormData>({
+    resolver: zodResolver(newsletterSchema)
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle newsletter subscription logic here
-    console.log("Subscribing email:", email)
-    // Reset form
-    setEmail("")
+  const onSubmit = async (data: NewsletterFormData) => {
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/newsletter_subscriptions/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          toast.error('This email is already subscribed to our newsletter!')
+        } else {
+          throw new Error(result.error || 'Failed to subscribe')
+        }
+        return
+      }
+
+      toast.success('Successfully subscribed to our newsletter!')
+      reset()
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error)
+      toast.error('Failed to subscribe. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Your Email"
-        className="px-4 py-3 rounded-md text-sm  w-58 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-      <CustomButton  variant="primary" className="whitespace-nowrap">
-        Subscribe
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-3">
+      <div className="flex-1">
+        <input
+          {...register("email")}
+          type="email"
+          placeholder="Your Email"
+          className={`px-4 py-3 rounded-md text-sm w-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500 ring-red-500' : ''}`}
+        />
+        {errors.email && (
+          <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
+        )}
+      </div>
+      <CustomButton 
+        type="submit" 
+        variant="primary" 
+        className="whitespace-nowrap" 
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Subscribing...</span>
+          </div>
+        ) : (
+          'Subscribe'
+        )}
       </CustomButton>
     </form>
   )
@@ -106,15 +192,16 @@ function NewsletterForm() {
 
 // Data for footer links
 const languagesLinks = [
-  { label: "HTML", href: "/languages/html" },
-  { label: "CSS", href: "/languages/css" },
-  { label: "Java Script", href: "/languages/javascript" },
-  { label: "Java", href: "/languages/java" },
-  { label: "Python", href: "/languages/python" },
-  { label: "Ruby", href: "/languages/ruby" },
-  { label: "PHP", href: "/languages/php" },
-  { label: "Swift", href: "/languages/swift" },
-  { label: "Kotlin", href: "/languages/kotlin" },
+  
+  { label: "IT & Cybersecurity", href: "/" },
+  { label: "Project Management", href: "/" },
+  { label: "Finance", href: "/" },
+  { label: "Risk", href: "/" },
+  { label: "Data Protection", href: "/" },
+  { label: "Citizenship", href: "/" },
+  { label: "Marketing", href: "/" },
+  { label: "HR", href: "/" },
+ 
 ]
 
 const programsLinks = [
@@ -131,8 +218,7 @@ const programsLinks = [
 const supportLinks = [
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Terms & Conditions", href: "/terms" },
-  { label: "Disclaimer", href: "/disclaimer" },
-  { label: "Support", href: "/support" },
+ 
   { label: "FAQ", href: "/faq" },
 ]
 
@@ -158,7 +244,7 @@ export default function Footer() {
         <hr className="border-gray-800 my-12" />
 
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Logo and Description */}
           <div className="space-y-4">
             <Logo />
@@ -170,8 +256,8 @@ export default function Footer() {
           </div>
 
           {/* Links Sections */}
-          <FooterLinks title="Languages" links={languagesLinks} />
-          <FooterLinks title="Featured Programs" links={programsLinks} />
+          <FooterLinks title="LanguagExam Categorieses" links={languagesLinks} />
+          {/* <FooterLinks title="Featured Programs" links={programsLinks} /> */}
           <FooterLinks title="Support" links={supportLinks} />
         </div>
 
@@ -180,7 +266,7 @@ export default function Footer() {
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm mt-2 text-gray-500">Elevate Exams</p>
-          <p className="text-sm text-gray-500 mt-2 md:mt-0">Copyright © 2022. All rights reserved.</p>
+          <p className="text-sm text-gray-500 mt-2 md:mt-0">Copyright © {new Date().getFullYear()}. All rights reserved.</p>
         </div>
       </div>
     </footer>

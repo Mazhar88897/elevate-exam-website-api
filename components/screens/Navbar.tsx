@@ -17,16 +17,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: "Home", href: "/" },
-  { title: "About", href: "/main/about" },
+
+
   {
-    title: "Courses",
+    title: "Exams",
     hasDropdown: true,
     submenu: [
-      { title: "Courses", href: "/main/courses" },
-      { title: "Course Details", href: "/main/courses/single-course" },
+      { title: "Exams", href: "/main/courses" },
+      { title: "Exams Details", href: "/main/courses/single-course" },
     ],
   },
+  { title: "How It Works", href: "/main/platform" },
   {
     title: "Pages",
     hasDropdown: true,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
       { title: "About Us", href: "/main/about" },
       { title: "Contact Us", href: "/main/contact" },
       { title: "FAQ", href: "/main/faq" },
+      {title: "pricing", href: "/main/pricing" },
     ],
   },
   {
@@ -75,13 +77,13 @@ export default function Navbar() {
   }
 
   return (
-    <header className="w-full sm:mx-auto lg:px-[12rem] sm:bg-white lg:bg-[#FDFBFB]">
+    <header className="w-full sm:mx-auto xl:px-[4rem] bg-white xl:bg-[#FDFBFB]">
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
         <Link href="/" className="flex items-center">
           <Logo />
         </Link>
 
-        <nav className="hidden lg:block">
+        <nav className="hidden xl:flex items-center space-x-8">
           <ul className="flex space-x-8">
             {navItems.map((item) => (
               <li
@@ -102,14 +104,14 @@ export default function Navbar() {
                 )}
                 {item.hasDropdown && (
                   <div
-                    className={`absolute left-0 top-full z-10 mt-5 w-48 rounded-md border bg-white lg:bg-[#FDFBFB] shadow-lg transition-opacity duration-200 ${
+                    className={`absolute left-0 top-full z-10 mt-5 w-48 rounded-md border bg-white xl:bg-[#FDFBFB] shadow-lg transition-opacity duration-200 ${
                       activeDropdown === item.title
                         ? "opacity-100 visible"
                         : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
                     }`}
                   >
                     {item.submenu?.map((subitem) => (
-                      <Link key={subitem.title} href={subitem.href} className="block text-xs text-slate-500 px-4 lg:py-3 py-1 hover:text-slate-300">
+                      <Link key={subitem.title} href={subitem.href} className="block text-xs text-slate-500 px-4 xl:py-3 py-1 hover:text-slate-300">
                         {subitem.title}
                       </Link>
                     ))}
@@ -118,39 +120,39 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
+          
+          {/* Search Bar */}
+          <div className="flex items-center border border-gray-300 rounded-lg p-2 w-44 bg-white shadow-sm hover:shadow-md transition-shadow">
+            <input
+              type="text"
+              placeholder="Search " 
+              className="w-full text-sm flex-grow outline-none bg-transparent px-2 text-gray-700 placeholder-gray-400"
+            />
+            <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          </div>
         </nav>
 
-        <div className="flex items-center">
-          <div className="hidden lg:block mr-4">
-
-          <div className="flex items-center border border-gray-400  p-2 w-52">
-  <input
-    type="text"
-    placeholder="Search..." 
-    className="w-full text-sm flex-grow outline-none bg-transparent px-2 text-gray-700"
-  />
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5 text-gray-500 flex-shrink-0"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path
-      fillRule="evenodd"
-      d="M8 2a6 6 0 104.472 10.193l4.182 4.182a1 1 0 001.415-1.414l-4.182-4.182A6 6 0 008 2zm0 2a4 4 0 100 8 4 4 0 000-8z"
-      clipRule="evenodd"
-    />
-  </svg>
-</div>
-
-
-
+        <div className="flex items-center space-x-4">
+          {/* Sign in and Create Account Buttons */}
+          <div className="hidden xl:flex items-center space-x-3">
+            <Link 
+              href="/login" 
+              className="px-4 py-2 text-sm font-medium text-[#1a2352] hover:text-[#1a2352]/80 transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link 
+              href="/register" 
+              className="px-6 py-2 bg-[#1a2352] text-white text-sm font-medium rounded-lg hover:bg-[#1a2352]/90 transition-colors shadow-sm hover:shadow-md"
+            >
+              Create Account
+            </Link>
           </div>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild className="lg:hidden">
+            <SheetTrigger asChild className="xl:hidden">
             <HoverCard> 
-              <Button variant="outline" size="icon" className="lg:hidden border rounded-md p-2 h-10 w-10">
+              <Button variant="outline" size="icon" className="xl:hidden border rounded-md p-2 h-10 w-10">
                 <span className="sr-only">Toggle menu</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -226,6 +228,24 @@ export default function Navbar() {
                   ))}
                 </ul>
               </nav>
+              
+              {/* Mobile Sign in and Create Account Buttons */}
+              <div className="px-6 py-4 border-t">
+                <div className="flex flex-col space-y-3">
+                  <Link 
+                    href="/login" 
+                    className="w-full px-4 py-3 text-center text-sm font-medium text-[#1a2352] border border-[#1a2352] rounded-lg hover:bg-[#1a2352] hover:text-white transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="w-full px-4 py-3 text-center text-sm font-medium bg-[#1a2352] text-white rounded-lg hover:bg-[#1a2352]/90 transition-colors"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
@@ -237,7 +257,12 @@ export default function Navbar() {
 function Logo() {
   return (
     <div className="flex items-center">
-     <Image src="/logo-t.jpg" alt="Logo" width={150} height={100} />
+     <Image src="/logo-t.jpg" alt="Logo" width={200} height={150} />
+     {/* <Link href="/" className="flex items-center space-x-2 text-black text-3xl font-semibold">
+     
+     elevate exams
+    </Link> */}
+    
     </div>
   )
 }

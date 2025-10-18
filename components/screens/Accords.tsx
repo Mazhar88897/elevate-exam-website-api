@@ -10,30 +10,34 @@ export default function ProgrammingCourse() {
   // Topics data with descriptions
   const topics = [
     {
-      title: "Programming Basic",
+      title: "Exam-style Quiz Questions",
       description:
-        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
     },
     {
-      title: "Get A Helpful Roadmap",
+      title: "Practice Exams",
       description:
-        "Discover a structured learning path that guides you from beginner to advanced programming concepts. Our roadmap is designed to help you progress efficiently through your learning journey.",
+        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
     },
     {
-      title: "Build Tool With Logic",
+      title: "AI Assistant",
       description:
-        "Learn how to create practical tools and applications by applying logical thinking and programming principles. This hands-on approach will strengthen your problem-solving abilities.",
+        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
     },
     {
-      title: "Computer Science",
+      title: "Flashcards",
       description:
-        "Explore fundamental computer science concepts including algorithms, data structures, and computational thinking. Understanding these principles will make you a more effective programmer.",
+        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
     },
     {
-      title: "Data Structure",
+      title: "Performance Analytics",
       description:
-        "Master essential data structures like arrays, linked lists, trees, and graphs. Learn when and how to implement each structure to optimize your code for different scenarios.",
+        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
     },
+    {
+      title: "Notes",
+      description:
+       "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit."    },
   ]
 
   // Toggle accordion open/close
@@ -76,12 +80,13 @@ export default function ProgrammingCourse() {
         <span className="text-xs font-bold">#logic</span>
       </div>
 
-      <h2 className="text-lg font-bold text-slate-700">Programming Basic Full Course</h2>
+      <h2 className="text-lg font-bold text-slate-700">How it Works</h2>
 
       <p className="text-slate-700 text-sm">
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusant doloremque laudatium totam rem
-        aperiam vitae ullamcorper. Ut enim ad minim veniam, quis nostrud exercitation dolore magna aliqua.
-      </p>
+      The platform walkthrough provides
+a step-by-step guide to help users
+navigate the exams website with
+ease.   </p>
 
       <div className="pt-2">
         <a
@@ -96,7 +101,7 @@ export default function ProgrammingCourse() {
 
     {/* Right Column - Topics List */}
     <div className="flex-1 min-w-[300px] space-y-4">
-      <h2 className="text-3xl font-semibold text-slate-700 mb-8">We Also Provide Online Programming Videos</h2>
+      <h2 className="text-3xl font-semibold text-slate-700 mb-8">Features We Offer</h2>
 
       <div className="space-y-6">
         {/* Accordion Topics */}

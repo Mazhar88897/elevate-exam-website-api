@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Megaphone, Clock, AlertCircle, Info, CheckCircle, Calendar } from "lucide-react"
+import { Megaphone, Clock, AlertCircle, Info, CheckCircle, Calendar, Loader2 } from "lucide-react"
+import Image from "next/image"
+import toast from "react-hot-toast"
 
 interface Announcement {
   id: number
@@ -16,50 +18,45 @@ interface Announcement {
   isRead: boolean
 }
 
-const sampleAnnouncements: Announcement[] = [
-  {
-    id: 1,
-    title: "New Course Available: Advanced Python Programming",
-    description: "We've just launched our new Advanced Python Programming course. This comprehensive course covers advanced topics including decorators, generators, async programming, and more. Enroll now to enhance your Python skills!",
-    type: "info",
-    date: "2024-01-15",
-    time: "10:30 AM",
-    isRead: true
-  },
-  {
-    id: 2,
-    title: "System Maintenance Scheduled",
-    description: "Scheduled maintenance will occur on January 20th from 2:00 AM to 4:00 AM EST. During this time, the platform may be temporarily unavailable. We apologize for any inconvenience.",
-    type: "warning",
-    date: "2024-01-14",
-    time: "3:45 PM",
-    isRead: true
-  },
-  {
-    id: 3,
-    title: "Congratulations! we have new feature",
-    description: "We have added a new feature to the platform. You can now create your own study groups and connect with other learners. This is a great way to study together and get help from other learners.",
-    type: "success",
-    date: "2024-01-13",
-    time: "9:15 AM",
-    isRead: true
-  },
-  {
-    id: 4,
-    title: "Urgent: Security Update Required",
-    description: "Please update your password immediately due to a recent security enhancement. This is mandatory for all users to ensure account security.",
-    type: "urgent",
-    date: "2024-01-12",
-    time: "11:20 AM",
-    isRead: true
-  },
- 
- 
-]
 
 export default function AnnouncementsPage() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>(sampleAnnouncements)
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<"all" | "unread" | "urgent">("all")
+
+  // Fetch announcements from API
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/general_announcements/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Token ${sessionStorage.getItem('Authorization')}`, // Replace with actual token
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch announcements')
+        }
+
+        const data = await response.json()
+        setAnnouncements(data)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching announcements'
+        setError(errorMessage)
+        toast.error(errorMessage)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnnouncements()
+  }, [])
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -153,9 +150,40 @@ export default function AnnouncementsPage() {
           </Button>
         </div> */}
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-[#ffd404]" />
+              <span className="text-gray-600">Loading announcements...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              Failed to load announcements
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {error}
+            </p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+              size="sm"
+            >
+              Try Again
+            </Button>
+          </div>
+        )}
+
         {/* Announcements List */}
-        <div className="space-y-4">
-          {filteredAnnouncements.map((announcement) => (
+        {!loading && !error && (
+          <div className="space-y-4">
+            {filteredAnnouncements.map((announcement) => (
             <Card 
               key={announcement.id} 
               className={'transition-all duration-200 hover:shadow-md '}
@@ -212,12 +240,20 @@ export default function AnnouncementsPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredAnnouncements.length === 0 && (
+        {/* Empty State */}
+        {!loading && !error && filteredAnnouncements.length === 0 && (
           <div className="text-center py-12">
-            <Megaphone className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Image
+              src="/nothing.png"
+              alt="No announcements"
+              width={200}
+              height={200}
+              className="mx-auto mb-4"
+            />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               No announcements found
             </h3>

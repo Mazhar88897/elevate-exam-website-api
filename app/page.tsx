@@ -19,7 +19,8 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 export default function Home() {
   return (
     <main className="">
-      <Navbar />
+      <div className="sticky top-0 z-50"><Navbar /></div>
+     
       <Hero />
       <div className=" hidden lg:block  lg:-translate-y-[150px]   w-full  justify-center items-center">
       
@@ -31,6 +32,7 @@ export default function Home() {
     />
                             
       </div>
+      
       <div className=" flex lg:hidden h-[50vh]  lg:-translate-y-[150px]   w-full  justify-center items-center">
       
       <h1 className="text-4xl">Animation</h1>

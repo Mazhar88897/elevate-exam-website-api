@@ -8,7 +8,7 @@ const layout = ({
     children: React.ReactNode
   }) => {
   return (
-    <><Navbar /><div>{children}</div><Footer /></>
+    <><div className="sticky top-0 z-50"><Navbar /></div><div>{children}</div><Footer /></>
   )
 }
 

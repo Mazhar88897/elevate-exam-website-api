@@ -1,12 +1,71 @@
-import { Facebook, Twitter, Instagram, Youtube, MapPin, Phone, Mail, Clock } from "lucide-react"
+"use client"
+
+import { useState } from "react"
+import { Facebook, Twitter, Instagram, Youtube, MapPin, Phone, Mail, Clock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomButton } from "@/components/pages/CustomButton"
 import { Highlight } from "@/components/pages/Highlight"
 import { HoverCard } from "@/components/pages/HoverCard"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { toast } from "react-hot-toast"
+
+// Form validation schema
+const contactFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name cannot exceed 100 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  subject: z.string().min(5, "Subject must be at least 5 characters").max(200, "Subject cannot exceed 200 characters"),
+  message: z.string().min(10, "Message must be at least 10 characters").max(1000, "Message cannot exceed 1000 characters"),
+  topic: z.string().optional()
+})
+
+type ContactFormData = z.infer<typeof contactFormSchema>
 
 export default function Contact() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema)
+  })
+
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true)
+    
+    try {
+     
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/help_center/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          topic: 'contact'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send message')
+      }
+
+      toast.success('Message sent successfully! We\'ll get back to you soon.')
+      reset()
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message. Please try Stable Connection.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
   return (
     <div className="w-full   px-8 py-12 mt-8">
         <div className="max-w-5xl mx-auto ">
@@ -18,21 +77,71 @@ export default function Contact() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eius tempor incididunt ut labore etdolore.
           </p>
 
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
-              <Input type="text" placeholder="Your Name" className="flex-1 border-[1px] border-black text-sm" />
-              <Input type="email" placeholder="Your Email" className="flex-1 border-[1px] border-black text-sm" />
+              <div className="flex-1">
+                <Input 
+                  {...register("name")}
+                  type="text" 
+                  placeholder="Your Name" 
+                  className={`flex-1 border-[1px] border-black text-sm ${errors.name ? 'border-red-500' : ''}`} 
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                )}
+              </div>
+              <div className="flex-1">
+                <Input 
+                  {...register("email")}
+                  type="email" 
+                  placeholder="Your Email" 
+                  className={`flex-1 border-[1px] border-black text-sm ${errors.email ? 'border-red-500' : ''}`} 
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                )}
+              </div>
             </div>
 
-            <Input type="text" placeholder="Subject" className="w-full border-[1px] border-black text-sm" />
+            <div>
+              <Input 
+                {...register("subject")}
+                type="text" 
+                placeholder="Subject" 
+                className={`w-full border-[1px] border-black text-sm ${errors.subject ? 'border-red-500' : ''}`} 
+              />
+              {errors.subject && (
+                <p className="text-red-500 text-xs mt-1">{errors.subject.message}</p>
+              )}
+            </div>
 
-            <Textarea placeholder="Message" className="w-full min-h-[160px] border-[1px] border-black text-sm" />
+            <div>
+              <Textarea 
+                {...register("message")}
+                placeholder="Message" 
+                className={`w-full min-h-[160px] border-[1px] border-black text-sm ${errors.message ? 'border-red-500' : ''}`} 
+              />
+              {errors.message && (
+                <p className="text-red-500 text-xs mt-1">{errors.message.message}</p>
+              )}
+            </div>
 
-            <CustomButton className="w-full">
+            <CustomButton 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <p className="text-sm font-medium">Sending...</p>
+                </div>
+              ) : (
                 <p className="text-sm font-medium">Send Message</p>
+              )}
             </CustomButton>
            
-                   </form>
+          </form>
         </div>
 
         {/* Right Section - Contact Information */}

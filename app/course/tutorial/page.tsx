@@ -32,7 +32,7 @@ export default function TutorialPage() {
             <h2 className="text-2xl font-semibold text-foreground mb-4">Welcome to Elevate Exams</h2>
             <p className="text-muted-foreground leading-relaxed">
               Elevate Exams is your comprehensive platform for exam preparation and learning. Our platform combines
-              interactive flashcards, practice tests, and detailed analytics to help you achieve your learning goals.
+              exam-style quiz questions, practice exams, AI assistance, flashcards, performance analytics, and note-taking to help you achieve your learning goals.
             </p>
           </section>
 
@@ -40,27 +40,39 @@ export default function TutorialPage() {
             <h2 className="text-2xl font-semibold text-foreground mb-4">Key Features</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="p-4 rounded-lg border border-border">
-                <h3 className="font-semibold text-foreground mb-2">Interactive Flashcards</h3>
+                <h3 className="font-semibold text-foreground mb-2">Exam-style Quiz Questions</h3>
                 <p className="text-muted-foreground">
-                  Create and study with interactive flashcards that adapt to your learning pace.
+                  Practice with realistic exam-style questions that mirror actual test conditions with detailed explanations.
                 </p>
               </div>
               <div className="p-4 rounded-lg border border-border">
-                <h3 className="font-semibold text-foreground mb-2">Practice Tests</h3>
+                <h3 className="font-semibold text-foreground mb-2">Practice Exams</h3>
                 <p className="text-muted-foreground">
-                  Take practice tests to assess your knowledge and identify areas for improvement.
+                  Take full-length practice exams to simulate real test conditions and build confidence.
                 </p>
               </div>
               <div className="p-4 rounded-lg border border-border">
-                <h3 className="font-semibold text-foreground mb-2">Progress Tracking</h3>
+                <h3 className="font-semibold text-foreground mb-2">AI Assistant</h3>
                 <p className="text-muted-foreground">
-                  Monitor your progress with detailed analytics and performance metrics.
+                  Get instant help with our intelligent AI assistant for personalized study recommendations.
                 </p>
               </div>
               <div className="p-4 rounded-lg border border-border">
-                <h3 className="font-semibold text-foreground mb-2">AI-Powered Learning</h3>
+                <h3 className="font-semibold text-foreground mb-2">Flashcards</h3>
                 <p className="text-muted-foreground">
-                  Get personalized recommendations and assistance from our AI learning assistant.
+                  Create and study with interactive flashcards using spaced repetition techniques.
+                </p>
+              </div>
+              <div className="p-4 rounded-lg border border-border">
+                <h3 className="font-semibold text-foreground mb-2">Performance Analytics</h3>
+                <p className="text-muted-foreground">
+                  Track your progress with detailed analytics and performance metrics to optimize your study strategy.
+                </p>
+              </div>
+              <div className="p-4 rounded-lg border border-border">
+                <h3 className="font-semibold text-foreground mb-2">Notes</h3>
+                <p className="text-muted-foreground">
+                  Take and organize your study notes with our integrated note-taking system for quick review.
                 </p>
               </div>
             </div>
