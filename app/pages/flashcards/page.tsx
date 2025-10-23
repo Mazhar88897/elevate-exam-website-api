@@ -1,11 +1,39 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Star, X, ArrowLeft, ArrowRight, Shuffle, ChevronRight, ChevronDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
+import Image from "next/image"
+
+// API data interfaces
+interface FlashcardAPI {
+  id: number;
+  primary_text: string;
+  secondary_text: string;
+}
+
+interface SubTopicAPI {
+  id: number;
+  name: string;
+  flashcard_count: number;
+  flashcards: FlashcardAPI[];
+}
+
+interface ChapterAPI {
+  id: number;
+  name: string;
+  subtopics: SubTopicAPI[];
+}
+
+interface CourseAPI {
+  id: number;
+  name: string;
+  total_flashcards: number;
+  chapters: ChapterAPI[];
+}
 // Utility function for class names
 function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(" ")
@@ -164,8 +192,75 @@ const FlashcardWithFlip = ({
 
 function FlashcardContent() {
   const { openModal } = useModal()
-  // Course data with subchapters
-  const myCourse: Course = {
+  
+  // API data states
+  const [courseData, setCourseData] = useState<CourseAPI | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch API data
+  useEffect(() => {
+    const fetchFlashcardsData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const courseId = sessionStorage.getItem('course_id')
+        const token = sessionStorage.getItem('Authorization')
+        
+        if (!courseId) {
+          throw new Error('No course ID found in session')
+        }
+        
+        if (!token) {
+          throw new Error('No authentication token found')
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/flashcard_page/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+        }
+
+        const data: CourseAPI = await response.json()
+        setCourseData(data)
+      } catch (err) {
+        console.error('Error fetching flashcards data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load flashcards')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFlashcardsData()
+  }, [])
+
+  // Convert API data to component format
+  const myCourse: Course = courseData ? {
+    courseName: courseData.name,
+    chapters: courseData.chapters.map(chapter => ({
+      chapterName: chapter.name,
+      subchapters: chapter.subtopics.map(subtopic => ({
+        subchapterName: subtopic.name,
+        flashcards: subtopic.flashcards.map(flashcard => ({
+          question: flashcard.primary_text,
+          answer: flashcard.secondary_text
+        }))
+      }))
+    }))
+  } : {
+    courseName: "Loading...",
+    chapters: []
+  }
+
+  // Fallback course data for when API is not available
+  const fallbackCourse: Course = {
     courseName: "Introduction to TypeScript",
     chapters: [
       {
@@ -290,11 +385,57 @@ function FlashcardContent() {
   const [expandedChapters, setExpandedChapters] = useState<Record<number, boolean>>({})
 
   // Initialize completedCards with the new structure
-  const [completedCards, setCompletedCards] = useState<boolean[][][]>(
-    myCourse.chapters.map((chapter) =>
-      chapter.subchapters.map((subchapter) => Array(subchapter.flashcards.length).fill(false)),
-    ),
-  )
+  const [completedCards, setCompletedCards] = useState<boolean[][][]>([])
+
+  // Update completedCards when courseData changes
+  useEffect(() => {
+    if (courseData) {
+      const newCompletedCards = courseData.chapters.map((chapter) =>
+        chapter.subtopics.map((subtopic) => Array(subtopic.flashcards.length).fill(false)),
+      )
+      setCompletedCards(newCompletedCards)
+    }
+  }, [courseData])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex justify-center space-x-1 mb-4">
+            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          </div>
+          <div className="text-lg">Loading flashcards...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Image src="/nothing.png" alt="Error" width={200} height={200} className="mx-auto mb-4" />
+          <div className="text-lg text-red-500">{error}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // No data state
+  if (!courseData || courseData.chapters.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Image src="/nothing.png" alt="No Flashcards" width={200} height={200} className="mx-auto mb-4" />
+          <div className="text-lg">No flashcards available</div>
+        </div>
+      </div>
+    )
+  }
 
   // Current flashcard
   const currentChapter = myCourse.chapters[currentChapterIndex]
@@ -332,6 +473,15 @@ function FlashcardContent() {
 
   // Calculate progress
   const calculateProgress = () => {
+    // Safety check for completedCards
+    if (!completedCards || completedCards.length === 0) {
+      return { 
+        overall: 0, 
+        chapters: myCourse.chapters.map(() => 0),
+        subchapters: myCourse.chapters.map(() => [])
+      }
+    }
+
     // Overall progress
     const totalCompleted = completedCards.flat(2).filter(Boolean).length
     const overallProgress = (totalCompleted / totalFlashcards) * 100
@@ -342,18 +492,23 @@ function FlashcardContent() {
 
       let completedChapterCards = 0
       for (let i = 0; i < chapter.subchapters.length; i++) {
-        completedChapterCards += completedCards[chIdx][i].filter(Boolean).length
+        if (completedCards[chIdx] && completedCards[chIdx][i]) {
+          completedChapterCards += completedCards[chIdx][i].filter(Boolean).length
+        }
       }
 
-      return (completedChapterCards / totalChapterCards) * 100
+      return totalChapterCards > 0 ? (completedChapterCards / totalChapterCards) * 100 : 0
     })
 
     // Subchapter progress
     const subchapterProgress = myCourse.chapters.map((chapter, chIdx) =>
       chapter.subchapters.map((subchapter, subIdx) => {
-        const completed = completedCards[chIdx][subIdx].filter(Boolean).length
-        const total = subchapter.flashcards.length
-        return (completed / total) * 100
+        if (completedCards[chIdx] && completedCards[chIdx][subIdx]) {
+          const completed = completedCards[chIdx][subIdx].filter(Boolean).length
+          const total = subchapter.flashcards.length
+          return total > 0 ? (completed / total) * 100 : 0
+        }
+        return 0
       }),
     )
 
@@ -466,7 +621,7 @@ function FlashcardContent() {
       <div className="w-[18rem] border-r mt-5 p-4 hidden md:block">
         <div className="mb-6">
           <h2 className="font-black text-slate-800 dark:text-slate-300 text-md mb-2">{myCourse.courseName}</h2>
-          <Progress value={progress.overall} className="h-1.5 mt-4 rounded-full mb-4" />
+          <Progress value={progress.overall ?? 0} className="h-1.5 mt-4 rounded-full mb-4" />
         </div>
 
         {/* Chapters list with subchapters */}
@@ -487,9 +642,9 @@ function FlashcardContent() {
                   <div
                     className={cn(
                       "ml-auto w-5 h-5 rounded-full border-4 flex items-center justify-center",
-                      progress.chapters[chapterIdx] === 100
+                      (progress.chapters[chapterIdx] ?? 0) === 100
                         ? "bg-green-500 border-green-500"
-                        : progress.chapters[chapterIdx] > 0
+                        : (progress.chapters[chapterIdx] ?? 0) > 0
                           ? "bg-white border-green-500"
                           : "bg-white border-gray-300",
                     )}
@@ -498,7 +653,7 @@ function FlashcardContent() {
 
                 {/* Chapter progress bar */}
                 <div className="ml-6 mr-2 rounded-full">
-                  <Progress value={progress.chapters[chapterIdx]} className="h-1 rounded-full" />
+                  <Progress value={progress.chapters[chapterIdx] ?? 0} className="h-1 rounded-full" />
                 </div>
 
                 {/* Subchapters dropdown */}

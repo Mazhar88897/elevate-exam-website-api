@@ -1,7 +1,6 @@
-"use client" // This component now needs client-side interactivity
+"use client"
 
-import React from "react"
-
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -18,7 +17,6 @@ import {
   SquareIcon as SquareC,
   SquareIcon as SquareG,
   Brackets,
-
   Palette,
   Smartphone,
   Gamepad,
@@ -29,8 +27,24 @@ import {
   Bot,
   Cloud,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useWindowSize } from "@/hooks/use-window-size"
+import Image from "next/image"
+// API data interfaces
+interface Course {
+  id: number;
+  name: string;
+}
+
+interface Domain {
+  id: number;
+  name: string;
+  currently_studying: Course[];
+  course_library: Course[];
+}
 
 // Map icon names to Lucide React components
 const iconMap: { [key: string]: any } = {
@@ -58,75 +72,217 @@ const iconMap: { [key: string]: any } = {
   Cloud,
 }
 
-const allSubjects = [
-  { name: "Code foundations", icon: "Award" }, // Changed icon to match the new image
-  { name: "Professional skills", icon: "Briefcase" },
-  { name: "Python", icon: "Code" },
-  { name: "HTML & CSS", icon: "Brackets" },
-  { name: "Data science", icon: "BarChart" },
-  { name: "Java", icon: "Coffee" },
-  { name: "Web development", icon: "CodeXml" },
-  { name: "Data analytics", icon: "LineChart" },
-  { name: "Interview prep", icon: "Award" },
-  { name: "JavaScript", icon: "SquareJs" },
-  { name: "Web design", icon: "Palette" },
-  { name: "Machine learning", icon: "Brain" },
-  { name: "Computer science", icon: "Cpu" },
-  { name: "C++", icon: "SquareC" },
-  { name: "Mobile development", icon: "Smartphone" },
-  { name: "AI", icon: "Bot" },
-  { name: "IT", icon: "Laptop" },
-  { name: "C#", icon: "SquareC" },
-  { name: "Game development", icon: "Gamepad" },
-  { name: "Cloud computing", icon: "Cloud" },
-  { name: "Cybersecurity", icon: "ShieldCheck" },
-  { name: "Go", icon: "SquareG" },
-  { name: "DevOps", icon: "CloudCog" },
-  { name: "Certification prep", icon: "Award" },
-  // Add more subjects here to demonstrate load more
-  { name: "Networking", icon: "Cloud" },
-  { name: "Databases", icon: "BarChart" },
-  { name: "Algorithms", icon: "Brain" },
-  { name: "Operating Systems", icon: "Cpu" },
-  { name: "Software Engineering", icon:"Brain" },
-  { name: "Project Management", icon: "Briefcase" },
-]
 
-const courseLibrarySubjects = [
-  { name: "AWS Certification", icon: "Cloud" },
-  { name: "Microsoft Azure", icon: "CloudCog" },
-  { name: "Google Cloud", icon: "Cloud" },
-  { name: "Cisco Networking", icon: "Cpu" },
-  { name: "CompTIA A+", icon: "Laptop" },
-  { name: "CompTIA Security+", icon: "ShieldCheck" },
-  { name: "PMP Certification", icon: "Briefcase" },
-  { name: "Scrum Master", icon: "Award" },
-  { name: "Data Science Professional", icon: "BarChart" },
-  { name: "Machine Learning Engineer", icon: "Brain" },
-  { name: "Full Stack Developer", icon: "Code" },
-  { name: "DevOps Engineer", icon: "CloudCog" },
-  { name: "Cybersecurity Analyst", icon: "ShieldCheck" },
-  { name: "UI/UX Designer", icon: "Palette" },
-  { name: "Mobile App Developer", icon: "Smartphone" },
-  { name: "Game Developer", icon: "Gamepad" },
-  { name: "Database Administrator", icon: "BarChart" },
-  { name: "System Administrator", icon: "Cpu" },
-  { name: "AI Engineer", icon: "Bot" },
-  { name: "Blockchain Developer", icon: "Code" },
-  { name: "Cloud Architect", icon: "Cloud" },
-  { name: "Network Engineer", icon: "Cpu" },
-  { name: "Software Architect", icon: "Brain" },
-  { name: "QA Engineer", icon: "ShieldCheck" },
-  { name: "Product Manager", icon: "Briefcase" },
-  { name: "Technical Lead", icon: "Award" },
-]
 
-const SUBJECTS_PER_LOAD = 8 // Number of subjects to load at a time
+const SUBJECTS_PER_LOAD = 8
 
+// Domain component for industry carousel
+function Domain({ 
+  domains, 
+  selectedDomain, 
+  onDomainSelect, 
+  loading, 
+  error 
+}: { 
+  domains: Domain[]
+  selectedDomain: Domain | null
+  onDomainSelect: (domain: Domain) => void
+  loading: boolean
+  error: string | null
+}) {
+  const [industryStartIndex, setIndustryStartIndex] = useState(0)
+  const [industriesToShow, setIndustriesToShow] = useState(8)
+  const windowSize = useWindowSize()
+
+  // Update industries to show based on window size
+  useEffect(() => {
+    if (windowSize.width) {
+      if (windowSize.width >= 1024) {
+        setIndustriesToShow(12) // Show 12 industries on large screens
+      } else if (windowSize.width >= 768) {
+        setIndustriesToShow(6) // Show 6 industries on medium screens
+      } else if (windowSize.width >= 640) {
+        setIndustriesToShow(4) // Show 4 industries on small screens
+      } else {
+        setIndustriesToShow(3) // Show 3 industries on extra small screens
+      }
+      // Reset carousel position when window size changes
+      setIndustryStartIndex(0)
+    }
+  }, [windowSize.width])
+
+  // Navigation handlers for industry carousel
+  const handleIndustryLeft = () => {
+    if (industryStartIndex > 0) {
+      setIndustryStartIndex(industryStartIndex - 1)
+    }
+  }
+  
+  const handleIndustryRight = () => {
+    if (industryStartIndex < domains.length - industriesToShow) {
+      setIndustryStartIndex(industryStartIndex + 1)
+    }
+  }
+  
+  const isIndustryLeftDisabled = industryStartIndex === 0
+  const isIndustryRightDisabled = industryStartIndex >= domains.length - industriesToShow
+
+  if (loading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">All Domains</h2>
+        </div>
+        <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
+          <div className="flex space-x-4 min-w-max pr-4">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-8 w-24"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">All Domains</h2>
+        </div>
+        <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
+          <div className="text-red-500 text-sm">{error}</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">All Domains</h2>
+        {domains.length > industriesToShow && (
+          <div className="flex ml-2 gap-2">
+            <button
+              className={`h-8 w-8 rounded-full border flex items-center justify-center ${
+                isIndustryLeftDisabled
+                  ? "text-gray-300 border-gray-200 cursor-not-allowed"
+                  : "text-[#ffd404] border-[#ffd404]"
+              }`}
+              onClick={handleIndustryLeft}
+              disabled={isIndustryLeftDisabled}
+              aria-label="Previous domains"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              className={`h-8 w-8 rounded-full border flex items-center justify-center ${
+                isIndustryRightDisabled
+                  ? "text-gray-300 border-gray-200 cursor-not-allowed"
+                  : "text-[#ffd404] border-[#ffd404]"
+              }`}
+              onClick={handleIndustryRight}
+              disabled={isIndustryRightDisabled}
+              aria-label="Next domains"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="w-full overflow-x-auto border-b-2 sm:overflow-x-hidden mr-8 my-6 sm:my-5">
+        {/* Desktop view: show carousel with buttons */}
+        {windowSize.width && windowSize.width >= 1024 ? (
+          <div className="flex items-center">
+            <div className="flex space-x-4 min-w-max pr-4">
+              {domains.slice(industryStartIndex, industryStartIndex + industriesToShow).map((domain) => (
+                <button
+                  key={domain.id}
+                  onClick={() => onDomainSelect(domain)}
+                  className={`px-4 py-2 text-xs font-semibold whitespace-nowrap transition ${
+                    selectedDomain?.id === domain.id
+                      ? "border-b-4 border-[#ffd404] text-black dark:text-white "
+                      : "text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  {domain.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // Mobile view: keep horizontal scroll
+          <div className="flex space-x-4 min-w-max pr-4">
+            {domains.map((domain) => (
+              <button
+                key={domain.id}
+                onClick={() => onDomainSelect(domain)}
+                className={`px-4 py-2 text-xs font-semibold whitespace-nowrap transition ${
+                  selectedDomain?.id === domain.id
+                    ? "border-b-4 border-[#ffd404] text-black dark:text-white "
+                    : "text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {domain.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Main component combining Domain and Course Tabs
 export default function Component() {
-  const router = useRouter();
-  const [visibleSubjectsCount, setVisibleSubjectsCount] = React.useState(SUBJECTS_PER_LOAD)
-  const [visibleLibraryCount, setVisibleLibraryCount] = React.useState(SUBJECTS_PER_LOAD)
+  const router = useRouter()
+  const [visibleSubjectsCount, setVisibleSubjectsCount] = useState(SUBJECTS_PER_LOAD)
+  const [visibleLibraryCount, setVisibleLibraryCount] = useState(SUBJECTS_PER_LOAD)
+  
+  // API data states
+  const [domains, setDomains] = useState<Domain[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null)
+
+  // Fetch API data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const token = sessionStorage.getItem('Authorization')
+
+
+    
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+
+        const data = await response.json()
+        setDomains(data)
+        
+        // Set first domain as selected by default
+        if (data.length > 0) {
+          setSelectedDomain(data[0])
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
 
   const handleLoadMore = () => {
     setVisibleSubjectsCount((prevCount) => prevCount + SUBJECTS_PER_LOAD)
@@ -136,14 +292,78 @@ export default function Component() {
     setVisibleLibraryCount((prevCount) => prevCount + SUBJECTS_PER_LOAD)
   }
 
-  const subjectsToDisplay = allSubjects.slice(0, visibleSubjectsCount)
-  const libraryToDisplay = courseLibrarySubjects.slice(0, visibleLibraryCount)
-  const hasMoreSubjects = visibleSubjectsCount < allSubjects.length
-  const hasMoreLibrary = visibleLibraryCount < courseLibrarySubjects.length
+  // Get currently studying courses from selected domain
+  const currentlyStudyingCourses = selectedDomain?.currently_studying || []
+  const courseLibraryCourses = selectedDomain?.course_library || []
+
+  const subjectsToDisplay = currentlyStudyingCourses.slice(0, visibleSubjectsCount)
+  const libraryToDisplay = courseLibraryCourses.slice(0, visibleLibraryCount)
+  const hasMoreSubjects = visibleSubjectsCount < currentlyStudyingCourses.length
+  const hasMoreLibrary = visibleLibraryCount < courseLibraryCourses.length
+
+  if (loading) {
+    return (
+      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
+        <div className="mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">All Domains</h2>
+            </div>
+            <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
+              <div className="text-center py-8">
+                <div className="flex justify-center space-x-1">
+                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <div className="text-lg">Loading courses...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
+        <div className="mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">All Domains</h2>
+            </div>
+            <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
+              <div className=" font-bold text-lg text-center">No Domain Found</div>
+            </div>
+          </div>
+          <div className="text-center  py-8">
+            <Image src="/nothing.png" alt="No Domain" width={200} height={200} className="mx-auto mb-4" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-scree  py-8 p-4 rounded-[10px] text-white dark:text-white pt-6">
-      <div className=" mx-auto">
+    <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
+      <div className="mx-auto">
+        
+       
+        {/* Domain Section */}
+        <div className="mb-8">
+          <Domain 
+            domains={domains}
+            selectedDomain={selectedDomain}
+            onDomainSelect={setSelectedDomain}
+            loading={loading}
+            error={error}
+          />
+        </div>
+
+        {/* Course Tabs Section */}
         <h2 className="text-xl font-bold mb-8 text-black dark:text-white">Our path to exam success starts here</h2>
 
         <Tabs defaultValue="top-subjects" className="w-full">
@@ -163,57 +383,88 @@ export default function Component() {
           </TabsList>
 
           <TabsContent value="top-subjects">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {subjectsToDisplay.map((subject, index) => {
-                const IconComponent = iconMap[subject.icon]
-                return (
-                  <div
-                    key={index}
-                    className="flex hover:pointer flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
-                    onClick={() => {
-                      router.push(`/course/course-details`)
-                    }}
-                 >
-                    {IconComponent && <IconComponent className="w-6 h-6" />}
-                    <span className="text-base font-medium">{subject.name}</span>
-                  </div>
-                )
-              })}
-            </div>
-            
-            {hasMoreSubjects && (
-              <div className="mt-9 text-center">
-                <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
-                  load more
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </div>
+            {subjectsToDisplay.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+               <Image src="/nothing.png" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {subjectsToDisplay.map((course, index) => {
+                    // Use a default icon for courses
+                    const IconComponent = iconMap["Code"] || Code
+                    return (
+                     
+                      <div
+                        key={course.id}
+                        className="flex hover:pointer flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
+                        onClick={() => {
+                         sessionStorage.setItem('course_id', course.id.toString());
+                         sessionStorage.setItem('course_name', course.name);
+                         router.push(`/course/${course.id}`);      
+                        }}
+                      >
+                      
+                        <IconComponent className="w-6 h-6" />
+                        <span className="text-base font-medium">{course.name}</span>
+
+                      </div>
+                 
+                    )
+                  })}
+                </div>
+                
+                {hasMoreSubjects && (
+                  <div className="mt-9 text-center">
+                    <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
+                      load more
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
           
           <TabsContent value="certification-prep">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {libraryToDisplay.map((subject, index) => {
-                const IconComponent = iconMap[subject.icon]
-                return (
-                  <div
-                    key={index}
-                    className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
-                  >
-                    {IconComponent && <IconComponent className="w-6 h-6" />}
-                    <span className="text-base font-medium">{subject.name}</span>
-                  </div>
-                )
-              })}
-            </div>
-            
-            {hasMoreLibrary && (
-              <div className="mt-9 text-center">
-                <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
-                  load more
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </div>
+            {libraryToDisplay.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Image src="/nothing.png" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {libraryToDisplay.map((course, index) => {
+                    // Use a default icon for courses
+                    const IconComponent = iconMap["Code"] || Code
+                    return (
+                     
+                      <div
+                        key={course.id}
+                        className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
+                        onClick={() => {
+                          sessionStorage.setItem('course_id', course.id.toString());
+                          sessionStorage.setItem('course_name', course.name);
+                          router.push(`/course/${course.id}`)
+                        }}
+                     >
+                        <IconComponent className="w-6 h-6" />
+                        <span className="text-base font-medium">{course.name}</span>
+                      </div>
+                      //  </Link>
+                    )
+                  })}
+                </div>
+                
+                {hasMoreLibrary && (
+                  <div className="mt-9 text-center">
+                    <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
+                      load more
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>

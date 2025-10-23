@@ -332,7 +332,7 @@ export function Sidebar({ className }: SidebarProps) {
       key: "Course",
       
       items: [
-        { label: "Course Home", link: "/course/course-details", icon: HomeIcon, color: "text-blue-500" },
+        { label: "Course Home", link: `/course/${sessionStorage.getItem('course_id')}`, icon: HomeIcon, color: "text-blue-500" },
        
       ],
     },
@@ -365,8 +365,8 @@ export function Sidebar({ className }: SidebarProps) {
           icon: Target,
           color: "text-red-500",
           subItems: [
-            { label: "Full Test", link: "jbh" },
-            { label: "Test Analytics", link: "/course/vegdx-Mock-Assessment" },
+            { label: "Full Test", link: "test" },
+            { label: "Test Analytics", link: "test-analytics" },
           ]
         },
       ],
