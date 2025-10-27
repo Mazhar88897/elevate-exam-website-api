@@ -357,7 +357,7 @@ export function Sidebar({ className }: SidebarProps) {
           color: "text-green-500",
           subItems: [
             { label: "Take Quiz", link: "/pages/exam" },
-            { label: "Quiz Analytics", link: "/course/result/stats" },
+            { label: "Quiz Analytics", link: "/course/quiz-analytics" },
           ]
 
         },
@@ -365,8 +365,8 @@ export function Sidebar({ className }: SidebarProps) {
           icon: Target,
           color: "text-red-500",
           subItems: [
-            { label: "Full Test", link: "test" },
-            { label: "Test Analytics", link: "test-analytics" },
+            { label: "Full Test", link: "/course/test" },
+            { label: "Test Analytics", link: "/course/test-analytics" },
           ]
         },
       ],

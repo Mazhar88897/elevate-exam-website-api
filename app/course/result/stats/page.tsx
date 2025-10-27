@@ -1,5 +1,5 @@
 import React from 'react'
-import QuizResultsPage from "@/components/dashboardItems/resultNew"
+import QuizResultsPage from "@/components/dashboardItems/fullTestResult"
 const page = () => {
   return (
     <div>

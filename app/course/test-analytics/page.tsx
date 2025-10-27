@@ -1,11 +1,9 @@
 import React from 'react'
-import QuizResultsPage from "@/components/dashboardItems/result"
+import FullTestResultsPage from "@/components/dashboardItems/fullTestResult"
 const page = () => {
   return (
     <div>
-        <QuizResultsPage />
-
-      
+      <FullTestResultsPage/>
     </div>
   )
 }
