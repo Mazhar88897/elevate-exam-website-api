@@ -35,7 +35,7 @@ export default function AnnouncementsPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/general_announcements/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${sessionStorage.getItem('Authorization')}`, // Replace with actual token
+            'Authorization': `${sessionStorage.getItem('Authorization')}`, // Replace with actual token
             'Content-Type': 'application/json',
           },
         })

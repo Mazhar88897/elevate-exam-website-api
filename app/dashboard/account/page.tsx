@@ -75,7 +75,7 @@ export default function AccountPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Token ${Token}`,
+          'Authorization': `${Token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
@@ -113,7 +113,7 @@ export default function AccountPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${Token}`,
+            'Authorization': `${Token}`,
             'Content-Type': 'application/json',
           },
         })

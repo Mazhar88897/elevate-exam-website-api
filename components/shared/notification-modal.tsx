@@ -63,7 +63,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
           const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notifications/`, {
             method: 'GET',
             headers: {
-              'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+              'Authorization': `${sessionStorage.getItem('Authorization')}`,
               'Content-Type': 'application/json',
             },
           })

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown , ChevronUp ,   User, Settings, LogOut, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const menuOptions = [
   { icon: <User className="w-4 h-4 mr-2" />, text: "My Profile", href: "/dashboard/account" },
@@ -14,8 +15,48 @@ const menuOptions = [
 ];
 
 export default function Topbar() {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [logoutOpen, setLogoutOpen] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Get the auth token from sessionStorage
+      const authToken = sessionStorage.getItem('Authorization');
+      
+      if (!authToken) {
+        // If no token, just clear session and redirect
+        sessionStorage.clear();
+        router.push('/auth/sign-in');
+        return;
+      }
+
+      // Call logout API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/token/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Clear session storage regardless of API response
+      sessionStorage.clear();
+
+      // Redirect to sign-in page
+      router.push('/auth/sign-in');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if API call fails, clear session and redirect
+      sessionStorage.clear();
+      router.push('/auth/sign-in');
+    } finally {
+      setIsLoggingOut(false);
+      setLogoutOpen(false);
+    }
+  };
   return (
     <div className="flex items-center justify-end px-6 py-4 bg-white dark:bg-background relative">
       <div className="flex items-center cursor-pointer select-none" onClick={() => setOpen(!open)}>
@@ -52,12 +93,10 @@ export default function Topbar() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                setLogoutOpen(false)
-                // Add your logout logic here
-              }}
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              Logout
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
             </Button>
           </DialogFooter>
         </DialogContent>

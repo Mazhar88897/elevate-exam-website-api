@@ -47,8 +47,7 @@ export default function Courses() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/domains/courses/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
-            'Content-Type': 'application/json',
+                 'Content-Type': 'application/json',
           },
         })
         

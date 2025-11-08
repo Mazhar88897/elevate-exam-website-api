@@ -66,7 +66,7 @@ export default function CourseLandingPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/course_details/${courseId}/`, {
           method: 'GET',
           headers: {
-            // 'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+            // 'Authorization': `${sessionStorage.getItem('Authorization')}`,
             'Content-Type': 'application/json',
           },
         })

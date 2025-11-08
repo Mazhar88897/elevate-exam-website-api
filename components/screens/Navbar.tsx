@@ -136,13 +136,13 @@ export default function Navbar() {
           {/* Sign in and Create Account Buttons */}
           <div className="hidden xl:flex items-center space-x-3">
             <Link 
-              href="/login" 
+              href="/auth/sign-in" 
               className="px-4 py-2 text-sm font-medium text-[#1a2352] hover:text-[#1a2352]/80 transition-colors"
             >
               Sign in
             </Link>
             <Link 
-              href="/register" 
+              href="/auth/sign-up" 
               className="px-6 py-2 bg-[#1a2352] text-white text-sm font-medium rounded-lg hover:bg-[#1a2352]/90 transition-colors shadow-sm hover:shadow-md"
             >
               Create Account

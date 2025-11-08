@@ -49,7 +49,7 @@ export default function CalendarSchedule() {
         const res = await fetch(EVENTS_URL, {
           method: 'GET',
             headers: {
-            'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+            'Authorization': `${sessionStorage.getItem('Authorization')}`,
             'Content-Type': 'application/json',
           },
         })
@@ -148,7 +148,7 @@ export default function CalendarSchedule() {
       const res = await fetch(EVENTS_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+          'Authorization': `${sessionStorage.getItem('Authorization')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -467,7 +467,7 @@ export default function CalendarSchedule() {
                   const res = await fetch(EVENTS_URL, {
                     method: 'PUT',
                     headers: {
-                      'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+                      'Authorization': `${sessionStorage.getItem('Authorization')}`,
                       'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ title: editTitle, description: editDescription || undefined, event_date: eventDate }),
@@ -517,7 +517,7 @@ export default function CalendarSchedule() {
                 try {
                   const res = await fetch(url, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Token ${sessionStorage.getItem('Authorization')}` },
+                    headers: { 'Authorization': `${sessionStorage.getItem('Authorization')}` },
                   })
                   if (!res.ok) { toast.error('Failed to delete event'); return }
                   setEvents(events.filter((ev) => ev.id !== deletingEvent.id))

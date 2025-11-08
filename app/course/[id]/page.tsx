@@ -62,7 +62,7 @@ export default function CoursePage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/course_details/${courseId}/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${token}`,
+            'Authorization': `${token}`,
             'Content-Type': 'application/json',
           },
         })

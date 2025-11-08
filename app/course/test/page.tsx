@@ -8,32 +8,14 @@ import { useSupportModal } from "@/components/dashboardItems/support-modal"
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
 import { SupportModalProvider } from "@/components/dashboardItems/support-modal"
 import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import * as ProgressPrimitive from "@radix-ui/react-progress"
 
 // Utility function for class names
 function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(" ")
 }
-
-// Progress component
-const Progress = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
->(({ className, value, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn("relative h-2 w-full overflow-hidden rounded-full bg-gray-200", className)}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-green-500 transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </ProgressPrimitive.Root>
-))
-Progress.displayName = ProgressPrimitive.Root.displayName
 
 // API Response interfaces
 export interface ApiQuestion {
@@ -99,7 +81,6 @@ function QuizPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [completedQuestions, setCompletedQuestions] = useState<boolean[]>([])
   const [flaggedQuestions, setFlaggedQuestions] = useState<boolean[]>([])
   const [allQuestionsCompleted, setAllQuestionsCompleted] = useState(false)
@@ -110,7 +91,7 @@ function QuizPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${sessionStorage.getItem('course_id')}/full_test_page/`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -153,7 +134,7 @@ function QuizPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Token ${sessionStorage.getItem('Authorization')}`
+          "Authorization": `${sessionStorage.getItem('Authorization')}`
         },
         body: JSON.stringify(payload),
       });
@@ -174,7 +155,7 @@ function QuizPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/progress/?source=content`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -205,6 +186,7 @@ function QuizPage() {
       setQuestions(prevQuestions => {
         const newCompletedQuestions = prevQuestions.map(q => {
           const progressQ = data.questions.find(pq => pq.question === q.id)
+          // Mark as completed if it has any option selected (attempted, including skipped)
           return progressQ?.selected_option !== null && progressQ?.selected_option !== undefined
         })
         setCompletedQuestions(newCompletedQuestions)
@@ -216,17 +198,19 @@ function QuizPage() {
         })
         setFlaggedQuestions(newFlaggedQuestions)
         
-        // Determine starting question based on last_viewed_question
+        // Determine starting question based on last_viewed_question ID
         let startingIndex = 0
         
         if (data.last_viewed_question !== null && data.last_viewed_question !== undefined) {
-          // Find the index of the last viewed question in the questions array
+          // Find the index of the question with ID matching last_viewed_question
           const lastViewedIndex = prevQuestions.findIndex(q => q.id === data.last_viewed_question)
           if (lastViewedIndex !== -1) {
-            // Start from the next question after the last viewed question
-            startingIndex = lastViewedIndex + 1
-            // If we're at the end, start from the last viewed question
-            if (startingIndex >= prevQuestions.length) {
+            // Start from the question after the last viewed question
+            const nextIndex = lastViewedIndex + 1
+            if (nextIndex < prevQuestions.length) {
+              startingIndex = nextIndex
+            } else {
+              // If last viewed was the last question, stay on it
               startingIndex = lastViewedIndex
             }
           }
@@ -238,7 +222,21 @@ function QuizPage() {
           }
         }
         
+        // Set current question index and restore its state
         setCurrentQuestionIndex(startingIndex)
+        const startingQuestion = prevQuestions[startingIndex]
+        if (startingQuestion) {
+          const progressQ = data.questions.find(pq => pq.question === startingQuestion.id)
+          // Check if it has a valid answer (0-3), not skipped
+          if (progressQ?.selected_option !== null && progressQ?.selected_option !== undefined && 
+              progressQ.selected_option >= 0 && progressQ.selected_option <= 3) {
+            setSelectedOption(progressQ.selected_option)
+            setIsAnswered(true)
+          } else {
+            setSelectedOption(null)
+            setIsAnswered(false)
+          }
+        }
         
         return prevQuestions
       })
@@ -263,15 +261,7 @@ function QuizPage() {
   // Current question data
   const currentQuestion = questions[currentQuestionIndex]
   const totalQuestions = questions.length
-
-  // Calculate total progress
-  useEffect(() => {
-    if (questions.length > 0 && completedQuestions.length > 0) {
-      const completedCount = completedQuestions.filter(Boolean).length
-      setProgress((completedCount / totalQuestions) * 100)
-    }
-  }, [completedQuestions, totalQuestions, questions.length])
-
+  const [hundredPercentProgress, setHundredPercentProgress] = useState(false)
   // Navigate to specific question
   const navigateToQuestion = (questionIdx: number) => {
     setCurrentQuestionIndex(questionIdx)
@@ -311,13 +301,14 @@ function QuizPage() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
     } else {
+      setHundredPercentProgress(true)
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/submit/`,
           {
             method: "POST",
             headers: {
-              "Authorization": `Token ${sessionStorage.getItem('Authorization')}`,
+              "Authorization": `${sessionStorage.getItem('Authorization')}`,
               "Content-Type": "application/json",
             },
           }
@@ -340,7 +331,7 @@ function QuizPage() {
     setSelectedOption(null)
     setIsAnswered(false)
 
-    // Mark question as completed (for progress bar)
+    // Mark question as completed
     const newCompletedQuestions = [...completedQuestions]
     newCompletedQuestions[currentQuestionIndex] = true
     setCompletedQuestions(newCompletedQuestions)
@@ -436,20 +427,20 @@ function QuizPage() {
     <div className="flex min-h-screen">
       {/* Main content */}        
       <div className="flex-1 mx-4 flex flex-col">
+
+           
         {/* Premium banner */}
         <div className="max-w-5xl mx-auto w-full text-center">
-          {/* <p className="text-sm font-bold">Full Test</p> */}
-            <p className="sm:text-2xl text-xl font-bold pb-4"> {sessionStorage.getItem('course_name')}</p>
-
-        </div>
-     
-        {/* Progress bar */}
-        <div className="max-w-3xl mx-auto w-full px-4 rounded-mid">
-          <Progress value={progress} className="h-1.5 bg-gray-200 dark:bg-gray-800 rounded-mid" />
+          {/* <Progress value={getQuestionNumber()} className="h-1.5 bg-gray-200 rounded-mid" /> */}
+       
+          <p className="sm:text-2xl text-xl font-bold pb-4"> {sessionStorage.getItem('course_name')}</p>
         </div>
 
         {/* Question content */}
         <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
+          <div className="mb-4">
+            <Progress value={hundredPercentProgress ? 100 : getQuestionNumber()/totalQuestions*100} className="h-1.5 bg-gray-200 rounded-mid" />
+          </div>
           <div className="flex justify-between items-center mb-4">
             <div className="hidden sm:block text-sm font-black text-gray-600 dark:text-gray-300">
               Question <span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
@@ -547,6 +538,24 @@ function QuizPage() {
     </div>
   )
 }
+
+
+const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn("relative h-2 w-full overflow-hidden rounded-full bg-gray-200", className)}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full w-full flex-1 bg-green-500 transition-all"
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
 
 // Mobile Tabs Component
 

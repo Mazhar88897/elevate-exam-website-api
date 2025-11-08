@@ -10,6 +10,9 @@ import { useSupportModal, SupportModalProvider } from "@/components/dashboardIte
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Button } from '@/components/ui/button'
+import { toast } from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 
 // Utility function for class names
@@ -241,6 +244,7 @@ function Topics({
 
 function QuizPage() {
   // Course data
+  const router = useRouter()
   const { openSupportModal } = useSupportModal()
   
   // API state
@@ -297,7 +301,7 @@ function QuizPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${sessionStorage.getItem('course_id')}/question_page/`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -356,7 +360,7 @@ function QuizPage() {
       console.log('=== FETCHING PROGRESS ===')
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/progress/`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -626,7 +630,7 @@ function QuizPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Token ${sessionStorage.getItem('Authorization')}`
+          "Authorization": `${sessionStorage.getItem('Authorization')}`
         },
         body: JSON.stringify(payload),
       });
@@ -935,6 +939,25 @@ function QuizPage() {
     return completedQuestions[chapterIdx][subChapterIdx].every(Boolean)
   }
 
+  const  handleSubmitQuiz = async () => {
+   
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/submit/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `${sessionStorage.getItem('Authorization')}`
+      },
+    })  
+    if (response.ok) {
+      toast.success("Quiz submitted successfully")
+      router.push(`/course/test-analytics`)
+    } else {
+      toast.error("Failed to submit quiz")
+    }
+  } 
+
+
+
   return (
     <div className="flex min-h-screen ">
       {/* Sidebar */}
@@ -992,22 +1015,11 @@ function QuizPage() {
                   </div>
                 )}
                </div>
-              
-             
-              <div
-               
-                className={cn(
-                  " flex items-center gap-1",
-                   "hover:text-green-800",
-                )}
-                // onClick={handleFlag}
-              >
-               
-                {/* <span className="text-sm flex items-center justify-center  rounded-mid font-black">Submit Quiz            <ChevronRight className="h-4 w-4 mr-1 " strokeWidth={3} /> </span> */}
-             
-      
-               
-              </div>
+               <div>
+                <div onClick={handleSubmitQuiz} className="cursor-pointer text-gray-600 hover:text-gray-800 rounded-mid">
+                  <span className="text-sm font-bold">Submit Quiz  </span>
+                </div>
+               </div>
            
             </div>
           </div>
@@ -1126,9 +1138,10 @@ function QuizPage() {
        
         </div>
       </div>
-    </div>
-  )
+    </div>  
+  )   
 }
+  
 
 interface Message {
   id: string

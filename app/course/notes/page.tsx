@@ -73,7 +73,7 @@ export default function NotesApp() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+            'Authorization': `${sessionStorage.getItem('Authorization')}`,
             'Content-Type': 'application/json',
           },
         })
@@ -108,7 +108,7 @@ export default function NotesApp() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+          'Authorization': `${sessionStorage.getItem('Authorization')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -139,7 +139,7 @@ export default function NotesApp() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/${note.id}/`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+          'Authorization': `${sessionStorage.getItem('Authorization')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -181,7 +181,7 @@ export default function NotesApp() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/${noteToDelete.id}/`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`,
+          'Authorization': `${sessionStorage.getItem('Authorization')}`,
           'Content-Type': 'application/json',
         },
       })

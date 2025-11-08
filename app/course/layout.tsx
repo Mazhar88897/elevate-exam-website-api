@@ -3,7 +3,7 @@ import Link from "next/link"
 import React from "react"
 
 import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Home,
   Users,
@@ -57,10 +57,12 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [openSections, setOpenSections] = useState({
     shared: true,
     quiz: true,
@@ -104,6 +106,44 @@ export function Sidebar({ className }: SidebarProps) {
 
   const toggleSection = (key: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      // Get the auth token from sessionStorage
+      const authToken = sessionStorage.getItem('Authorization')
+      
+      if (!authToken) {
+        // If no token, just clear session and redirect
+        sessionStorage.clear()
+        router.push('/auth/sign-in')
+        return
+      }
+
+      // Call logout API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/token/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      // Clear session storage regardless of API response
+      sessionStorage.clear()
+
+      // Redirect to sign-in page
+      router.push('/auth/sign-in')
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Even if API call fails, clear session and redirect
+      sessionStorage.clear()
+      router.push('/auth/sign-in')
+    } finally {
+      setIsLoggingOut(false)
+      setLogoutOpen(false)
+    }
   }
 
   // Icon-only sidebar items
@@ -356,7 +396,7 @@ export function Sidebar({ className }: SidebarProps) {
           icon: FileQuestion,
           color: "text-green-500",
           subItems: [
-            { label: "Take Quiz", link: "/pages/exam" },
+            { label: "Take Quiz", link: "/pages/desktop-exam" },
             { label: "Quiz Analytics", link: "/course/quiz-analytics" },
           ]
 
@@ -521,12 +561,10 @@ export function Sidebar({ className }: SidebarProps) {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                setLogoutOpen(false)
-                console.log("User logged out")
-              }}
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              Logout
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
             </Button>
           </DialogFooter>
         </DialogContent>

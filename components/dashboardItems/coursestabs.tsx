@@ -33,6 +33,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useWindowSize } from "@/hooks/use-window-size"
 import Image from "next/image"
+import { toast } from "react-hot-toast"
 // API data interfaces
 interface Course {
   id: number;
@@ -90,6 +91,7 @@ function Domain({
   loading: boolean
   error: string | null
 }) {
+  const domainList = Array.isArray(domains) ? domains : []
   const [industryStartIndex, setIndustryStartIndex] = useState(0)
   const [industriesToShow, setIndustriesToShow] = useState(8)
   const windowSize = useWindowSize()
@@ -119,13 +121,13 @@ function Domain({
   }
   
   const handleIndustryRight = () => {
-    if (industryStartIndex < domains.length - industriesToShow) {
+    if (industryStartIndex < domainList.length - industriesToShow) {
       setIndustryStartIndex(industryStartIndex + 1)
     }
   }
   
   const isIndustryLeftDisabled = industryStartIndex === 0
-  const isIndustryRightDisabled = industryStartIndex >= domains.length - industriesToShow
+  const isIndustryRightDisabled = industryStartIndex >= domainList.length - industriesToShow
 
   if (loading) {
     return (
@@ -146,13 +148,8 @@ function Domain({
 
   if (error) {
     return (
-      <div>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">All Domains</h2>
-        </div>
-        <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
-          <div className="text-red-500 text-sm">{error}</div>
-        </div>
+      <div className="w-full flex items-center justify-center py-8">
+        <Image src="/something-went-wrong.png" alt="Something went wrong" width={260} height={260} />
       </div>
     )
   }
@@ -161,7 +158,7 @@ function Domain({
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">All Domains</h2>
-        {domains.length > industriesToShow && (
+        {domainList.length > industriesToShow && (
           <div className="flex ml-2 gap-2">
             <button
               className={`h-8 w-8 rounded-full border flex items-center justify-center ${
@@ -196,7 +193,7 @@ function Domain({
         {windowSize.width && windowSize.width >= 1024 ? (
           <div className="flex items-center">
             <div className="flex space-x-4 min-w-max pr-4">
-              {domains.slice(industryStartIndex, industryStartIndex + industriesToShow).map((domain) => (
+              {domainList.slice(industryStartIndex, industryStartIndex + industriesToShow).map((domain) => (
                 <button
                   key={domain.id}
                   onClick={() => onDomainSelect(domain)}
@@ -214,7 +211,7 @@ function Domain({
         ) : (
           // Mobile view: keep horizontal scroll
           <div className="flex space-x-4 min-w-max pr-4">
-            {domains.map((domain) => (
+            {domainList.map((domain) => (
               <button
                 key={domain.id}
                 onClick={() => onDomainSelect(domain)}
@@ -245,6 +242,7 @@ export default function Component() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null)
+  const domainList = Array.isArray(domains) ? domains : []
 
   // Fetch API data
   useEffect(() => {
@@ -257,10 +255,10 @@ export default function Component() {
 
 
     
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-paid/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${token}`,
+            'Authorization': `${token}`,
             'Content-Type': 'application/json',
           },
         })
@@ -270,7 +268,7 @@ export default function Component() {
         setDomains(data)
         
         // Set first domain as selected by default
-        if (data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
           setSelectedDomain(data[0])
         }
       } catch (err) {
@@ -290,6 +288,39 @@ export default function Component() {
 
   const handleLoadMoreLibrary = () => {
     setVisibleLibraryCount((prevCount) => prevCount + SUBJECTS_PER_LOAD)
+  }
+
+  // Handle course registration from course library
+  const handleRegisterCourse = async (courseId: number) => {
+    try {
+      const token = sessionStorage.getItem('Authorization')
+      
+      if (!token) {
+        console.error('No authorization token found')
+        return
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/user_courses/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          course: courseId.toString(),
+          status: 'studying'
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Course registered successfully')
+      } else {
+        console.error('Failed to register course:', response.statusText)
+        // toast.error('Failed to register course')
+      }
+    } catch (error) {
+      console.error('Error registering course:', error)
+    }
   }
 
   // Get currently studying courses from selected domain
@@ -329,20 +360,21 @@ export default function Component() {
 
   if (error) {
     return (
-      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
-        <div className="mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">All Domains</h2>
-            </div>
-            <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
-              <div className=" font-bold text-lg text-center">No Domain Found</div>
-            </div>
-          </div>
-          <div className="text-center  py-8">
-            <Image src="/nothing.png" alt="No Domain" width={200} height={200} className="mx-auto mb-4" />
-          </div>
-        </div>
+      <div className="w-full flex items-center justify-center py-12">
+        <Image src="/nothing.svg" alt="Nothing to show" width={260} height={260} />
+      </div>
+    )
+  }
+
+  if (!loading && !error && domainList.length === 0) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-12 gap-6">
+        <Image src="/nothing.svg" alt="Nothing to show" width={260} height={260} />
+        <Link href="/dashboard/add-domain">
+          <Button className="bg-blue-800 hover:bg-blue-900 text-white font-semibold">
+            Buy domain first
+          </Button>
+        </Link>
       </div>
     )
   }
@@ -355,7 +387,7 @@ export default function Component() {
         {/* Domain Section */}
         <div className="mb-8">
           <Domain 
-            domains={domains}
+            domains={domainList}
             selectedDomain={selectedDomain}
             onDomainSelect={setSelectedDomain}
             loading={loading}
@@ -385,7 +417,7 @@ export default function Component() {
           <TabsContent value="top-subjects">
             {subjectsToDisplay.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-               <Image src="/nothing.png" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
+               <Image src="/nothing.svg" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
               </div>
             ) : (
               <>
@@ -429,7 +461,7 @@ export default function Component() {
           <TabsContent value="certification-prep">
             {libraryToDisplay.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Image src="/nothing.png" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
+                <Image src="/nothing.svg" alt="No Courses" width={200} height={200} className="mx-auto mb-4" />
               </div>
             ) : (
               <>
@@ -443,8 +475,10 @@ export default function Component() {
                         key={course.id}
                         className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
                         onClick={() => {
+                          handleRegisterCourse(course.id)
                           sessionStorage.setItem('course_id', course.id.toString());
                           sessionStorage.setItem('course_name', course.name);
+
                           router.push(`/course/${course.id}`)
                         }}
                      >

@@ -1011,7 +1011,7 @@ function QuizPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${sessionStorage.getItem('course_id')}/question_page/`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -1066,7 +1066,7 @@ function QuizPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/progress/`, {
         headers: {
-          'Authorization': `Token ${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
       })
       
@@ -1253,7 +1253,7 @@ function QuizPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Token ${sessionStorage.getItem('Authorization')}`
+          "Authorization": `${sessionStorage.getItem('Authorization')}`
         },
         body: JSON.stringify(payload),
       });

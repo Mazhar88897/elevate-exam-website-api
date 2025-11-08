@@ -76,6 +76,7 @@ interface Question {
   status: QuestionStatus
   category: string
   explanation: string
+  correct_option: string
 }
 
 // API Response Interfaces
@@ -112,6 +113,13 @@ interface APIProgressResponse {
   last_viewed_question: number
   is_submitted: boolean
   questions: APIProgressQuestion[]
+}
+
+interface APIProgressWrapper {
+  id: number
+  course: number
+  data: APIProgressResponse
+  updated_at: string
 }
 
 export default function QuizResultsPage() {
@@ -161,14 +169,14 @@ export default function QuizResultsPage() {
             fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/full_test_page/`, {
               method: 'GET',
               headers: {
-                'Authorization': `Token ${token}`,
+                'Authorization': `${token}`,
                 'Content-Type': 'application/json',
               },
             }),
-            fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${courseId}/progress?source=analytics`, {
+            fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${courseId}/latest-submitted-analytics/   `, {
               method: 'GET',
               headers: {
-                'Authorization': `Token ${token}`,
+                'Authorization': `${token}`,
                 'Content-Type': 'application/json',
               },
             })
@@ -183,7 +191,9 @@ export default function QuizResultsPage() {
           }
 
           questionsData = await questionsResponse.json()
-          progressData = await progressResponse.json()
+          const progressWrapper: APIProgressWrapper = await progressResponse.json()
+          // Extract data from the wrapper
+          progressData = progressWrapper.data
 
         } catch (corsError) {
           console.log('Direct API call failed, trying proxy:', corsError)
@@ -192,7 +202,7 @@ export default function QuizResultsPage() {
           const response = await fetch(`/api/full-test?courseId=${courseId}&source=analytics`, {
             method: 'GET',
             headers: {
-              'Authorization': `Token ${token}`,
+              'Authorization': `${token}`,
               'Content-Type': 'application/json',
             },
           })
@@ -203,7 +213,14 @@ export default function QuizResultsPage() {
 
           const proxyData = await response.json()
           questionsData = proxyData.questions
-          progressData = proxyData.progress
+          // Handle both old and new format for proxy
+          if (proxyData.progress?.data) {
+            progressData = proxyData.progress.data
+          } else if (proxyData.progress) {
+            progressData = proxyData.progress
+          } else {
+            throw new Error('Invalid progress data format')
+          }
         }
 
         console.log('Questions API Response:', questionsData)
@@ -223,12 +240,16 @@ export default function QuizResultsPage() {
             status = "flagged"
           }
 
+          // Get correct option text based on correct_option number
+          const correctOptionText = apiQuestion[`option${apiQuestion.correct_option}` as keyof APIQuestion] as string
+
           return {
             id: index + 1, // Serial number instead of question ID
             text: apiQuestion.text,
             status,
             category: sessionStorage.getItem('course_name') || "", // You can modify this based on your needs
-            explanation: apiQuestion.explanation
+            explanation: apiQuestion.explanation,
+            correct_option: correctOptionText
           }
         })
 
@@ -415,7 +436,7 @@ export default function QuizResultsPage() {
          </div> */}
 
         {/* Question Details */}
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-5xl mx-auto">
       {questions.map((question: any) => (
         <div
           key={question.id}
@@ -448,12 +469,21 @@ export default function QuizResultsPage() {
                 )}
 
                 {question.status === "skipped" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4 text-white" />
+                  progressData?.last_viewed_question && progressData.last_viewed_question >= question.id ? (
+                    <div className="flex items-center gap-1 ml-3">
+                      <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                        <ChevronRight className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-600">Skipped</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-600">Skipped</span>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-1 ml-3">
+                      <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                        <ChevronRight className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-600">Unanswered</span>
+                    </div>
+                  )
                 )}
               </div>
 
@@ -484,10 +514,19 @@ export default function QuizResultsPage() {
          
           {/* Explanation Content */}
           {openExplanations[question.id] && (
+            <div>
+               
+            <div className="px-4 pb-4  border-gray-200 dark:bg-background">
+              
+              <p className="text-slate-800 dark:text-slate-100 text-xs font-bold">Correct Answer:</p>
+              <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">{question.correct_option}</p>
+            </div>
+            
             <div className="px-4 pb-4  border-gray-200 dark:bg-background">
               
               <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">Explaination:</p>
               <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">{question.explanation}</p>
+            </div>
             </div>
           )}
         </div>

@@ -190,14 +190,14 @@ export default function QuizResultsPage() {
             fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/question_page`, {
               method: 'GET',
               headers: {
-                'Authorization': `Token ${token}`,
+                'Authorization': `${token}`,
                 'Content-Type': 'application/json',
               },
             }),
             fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/progress/?source=analytics`, {
               method: 'GET',
               headers: {
-                'Authorization': `Token ${token}`,
+                'Authorization': `${token}`,
                 'Content-Type': 'application/json',
               },
             })
@@ -221,7 +221,7 @@ export default function QuizResultsPage() {
           const response = await fetch(`/api/quiz-data?courseId=${courseId}&source=analytics`, {
             method: 'GET',
             headers: {
-              'Authorization': `Token ${token}`,
+              'Authorization': `${token}`,
               'Content-Type': 'application/json',
             },
           })

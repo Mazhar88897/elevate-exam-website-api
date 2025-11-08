@@ -24,6 +24,7 @@ export default function BlogPostHeader() {
     const id = params?.id?.toString()
     const [blog, setBlog] = useState<Blog | null>(null)
     const [copied, setCopied] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
 
     const handleCopyLink = async () => {
         try {
@@ -41,12 +42,15 @@ export default function BlogPostHeader() {
         let isMounted = true
         const fetchBlog = async () => {
             try {
+                setIsLoading(true)
                 const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/blogs/${id}/`, { cache: "no-store" })
                 if (!res.ok) return
                 const data = (await res.json()) as Blog
                 if (isMounted) setBlog(data)
             } catch {
                 // ignore fetch errors for now
+            } finally {
+                if (isMounted) setIsLoading(false)
             }
         }
         fetchBlog()
@@ -54,6 +58,18 @@ export default function BlogPostHeader() {
             isMounted = false
         }
     }, [id])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "-0.3s" }}></span>
+          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "-0.15s" }}></span>
+          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce"></span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

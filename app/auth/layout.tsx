@@ -31,25 +31,19 @@ export default function Layout({
   <Link href="/" className="">
            <div className="p-5">
     <Image
-      className="hidden sm:block"
+      className="block"
       src="/Frame 2.svg"
       alt="Logo"
       width={140}
       height={140}
     />
-    <Image
-      className="block sm:hidden"
-      src="/only-cnc.svg"
-      alt="Logo"
-      width={80}
-      height={80}
-    />
+  
   </div>
     </Link>
 
 
   {/* Middle - Content */}
-  <main className="flex-1 overflow-auto transition-all duration-300">
+  <main id="main" className="flex-1 overflow-auto transition-all duration-300">
     {children}
   </main>
 

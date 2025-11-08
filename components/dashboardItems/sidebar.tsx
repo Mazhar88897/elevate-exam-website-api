@@ -16,7 +16,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationModal } from "@/components/shared/notification-modal"
 
@@ -42,7 +42,9 @@ export default function Sidebar({ className }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -73,6 +75,44 @@ export default function Sidebar({ className }: SidebarProps) {
       setNotificationOpen(true)
     } else if (label === "Logout") {
       setLogoutOpen(true)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      // Get the auth token from sessionStorage
+      const authToken = sessionStorage.getItem('Authorization')
+      
+      if (!authToken) {
+        // If no token, just clear session and redirect
+        sessionStorage.clear()
+        router.push('/auth/sign-in')
+        return
+      }
+
+      // Call logout API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/token/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      // Clear session storage regardless of API response
+      sessionStorage.clear()
+
+      // Redirect to sign-in page
+      router.push('/auth/sign-in')
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Even if API call fails, clear session and redirect
+      sessionStorage.clear()
+      router.push('/auth/sign-in')
+    } finally {
+      setIsLoggingOut(false)
+      setLogoutOpen(false)
     }
   }
 
@@ -251,12 +291,10 @@ export default function Sidebar({ className }: SidebarProps) {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                setLogoutOpen(false)
-                console.log("User logged out")
-              }}
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              Logout
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -219,7 +219,7 @@ function FlashcardContent() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/flashcard_page/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${token}`,
+            'Authorization': `${token}`,
             'Content-Type': 'application/json',
           },
         })
