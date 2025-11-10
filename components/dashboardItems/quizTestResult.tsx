@@ -138,9 +138,17 @@ interface APIProgressResponse {
   flagged_count: number
   skipped_count: number
   correct_count: number
-  last_viewed_question: number
+  last_viewed_question: number | null
   is_submitted: boolean
-  chapters: APIProgressChapter[]
+  chapters?: APIProgressChapter[]
+  questions?: APIProgressQuestion[]
+}
+
+interface APIProgressWrapper {
+  id: number
+  course: number
+  data: APIProgressResponse
+  updated_at: string
 }
 
 export default function QuizResultsPage() {
@@ -194,7 +202,7 @@ export default function QuizResultsPage() {
                 'Content-Type': 'application/json',
               },
             }),
-            fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/progress/?source=analytics`, {
+            fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/latest-submitted-analytics/`, {
               method: 'GET',
               headers: {
                 'Authorization': `${token}`,
@@ -212,7 +220,9 @@ export default function QuizResultsPage() {
           }
 
           questionsData = await questionsResponse.json()
-          progressData = await progressResponse.json()
+          const progressWrapper: APIProgressWrapper = await progressResponse.json()
+          // Extract data from the wrapper
+          progressData = progressWrapper.data
 
         } catch (corsError) {
           console.log('Direct API call failed, trying proxy:', corsError)
@@ -232,7 +242,14 @@ export default function QuizResultsPage() {
 
           const proxyData = await response.json()
           questionsData = proxyData.questions
-          progressData = proxyData.progress
+          // Handle both old and new format for proxy
+          if (proxyData.progress?.data) {
+            progressData = proxyData.progress.data
+          } else if (proxyData.progress) {
+            progressData = proxyData.progress
+          } else {
+            throw new Error('Invalid progress data format')
+          }
         }
 
         console.log('Questions API Response:', questionsData)
@@ -243,16 +260,29 @@ export default function QuizResultsPage() {
 
         // Flatten progress data to create a map of question ID to progress
         const progressMap = new Map<number, { selected_option: number | null; is_flagged: boolean }>()
-        progressData.chapters.forEach(chapter => {
-          chapter.subtopics.forEach(subtopic => {
-            subtopic.questions.forEach(progressQuestion => {
-              progressMap.set(progressQuestion.question, {
-                selected_option: progressQuestion.selected_option,
-                is_flagged: progressQuestion.is_flagged
+        
+        // Handle both nested chapters structure and flat questions array
+        if (progressData.questions && Array.isArray(progressData.questions)) {
+          // New structure: flat questions array
+          progressData.questions.forEach(progressQuestion => {
+            progressMap.set(progressQuestion.question, {
+              selected_option: progressQuestion.selected_option,
+              is_flagged: progressQuestion.is_flagged
+            })
+          })
+        } else if (progressData.chapters && Array.isArray(progressData.chapters)) {
+          // Old structure: nested chapters
+          progressData.chapters.forEach(chapter => {
+            chapter.subtopics.forEach(subtopic => {
+              subtopic.questions.forEach(progressQuestion => {
+                progressMap.set(progressQuestion.question, {
+                  selected_option: progressQuestion.selected_option,
+                  is_flagged: progressQuestion.is_flagged
+                })
               })
             })
           })
-        })
+        }
 
         // Flatten questions data and transform to component format
         const transformedQuestions: Question[] = []

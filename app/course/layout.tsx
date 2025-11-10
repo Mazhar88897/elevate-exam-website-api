@@ -95,9 +95,11 @@ export function Sidebar({ className }: SidebarProps) {
   const toggleSidebar = () => {
     setIsOpen(!isOpen)
   }
+  
+  const course_id = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null 
 
   const handleMenuItemClick = (label: string) => {
-    if (label === "Notification") {
+    if (label === "Notifications") {
       setNotificationOpen(true)
     } else if (label === "Logout") {
       setLogoutOpen(true)
@@ -372,7 +374,7 @@ export function Sidebar({ className }: SidebarProps) {
       key: "Course",
       
       items: [
-        { label: "Course Home", link: `/course/${sessionStorage.getItem('course_id')}`, icon: HomeIcon, color: "text-blue-500" },
+        { label: "Course Home", link: `/course/${course_id || ''}`, icon: HomeIcon, color: "text-blue-500" },
        
       ],
     },
@@ -382,7 +384,7 @@ export function Sidebar({ className }: SidebarProps) {
       color: "text-green-500",    
       items: [
         { label: "Flashcards", link: "/pages/flashcards", icon: BookMarked, color: "text-purple-500" },
-        { label: "Notes", link: "/course/notes", badge: 8, icon: PenTool, color: "text-orange-500" },
+        { label: "Notes", link: "/course/notes", icon: PenTool, color: "text-orange-500" },
         // { label: "Tutorial", link: "/course/tutorial" },
        
       ],
@@ -401,7 +403,7 @@ export function Sidebar({ className }: SidebarProps) {
           ]
 
         },
-        { label: "Mock Exams", link: "",
+        { label: "Full Exams", link: "",
           icon: Target,
           color: "text-red-500",
           subItems: [

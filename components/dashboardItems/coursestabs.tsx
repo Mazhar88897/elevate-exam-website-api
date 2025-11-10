@@ -368,14 +368,17 @@ export default function Component() {
 
   if (!loading && !error && domainList.length === 0) {
     return (
+      <Link href="/dashboard/add-domain">
       <div className="w-full flex flex-col items-center justify-center py-12 gap-6">
         <Image src="/nothing.svg" alt="Nothing to show" width={260} height={260} />
-        <Link href="/dashboard/add-domain">
-          <Button className="bg-blue-800 hover:bg-blue-900 text-white font-semibold">
+       
+          <p className=" text-foreground text-sm font-semibold">
             Buy domain first
-          </Button>
-        </Link>
+          </p>
+          
+        
       </div>
+      </Link>
     )
   }
 

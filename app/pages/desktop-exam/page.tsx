@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { AlertTriangle, SkipForward, ChevronDown, ChevronRight, CheckCircle2, ArrowRightToLineIcon, ArrowLeftToLineIcon, Paperclip, Send, Sparkles, FileCheck2, Flag, FlagOffIcon } from "lucide-react"
+import { AlertTriangle, SkipForward, ChevronDown, ChevronRight, CheckCircle2, ArrowRightToLineIcon, ArrowLeftToLineIcon, Paperclip, Send, Sparkles, FileCheck2, Flag, FlagOffIcon, XIcon } from "lucide-react"
 import Access from "@/components/dashboardItems/access"
 import Link from "next/link"
 import { useSupportModal, SupportModalProvider } from "@/components/dashboardItems/support-modal"
@@ -950,11 +950,27 @@ function QuizPage() {
     })  
     if (response.ok) {
       toast.success("Quiz submitted successfully")
-      router.push(`/course/test-analytics`)
+      router.push(`/course/quiz-analytics`)
     } else {
       toast.error("Failed to submit quiz")
     }
   } 
+
+  // Handle quit quiz button - show confirmation modal
+  const handleQuitQuiz = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/quit/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `${sessionStorage.getItem('Authorization')}`
+      }
+    })
+    if (response.ok){
+    toast.success("Quiz quitted successfully")
+    router.push(`/course/${sessionStorage.getItem('course_id')}`)
+    } else {
+      console.error("Failed to quit quiz")
+    } 
+  }
 
 
 
@@ -990,7 +1006,7 @@ function QuizPage() {
             <div className="text-sm font-black text-gray-600 dark:text-gray-300">
               Question <span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
             </div>
-            <div className="flex ">
+            <div className="flex space-x-2">
               <div className="text-gray-600 dark:text-gray-300 flex items-center " onClick={handleSkip}>
               <SkipForward className="h-3 mr-1 w-3 " strokeWidth={3} />
                 <span className="text-sm font-bold">Skip</span>
@@ -1015,11 +1031,16 @@ function QuizPage() {
                   </div>
                 )}
                </div>
-               <div>
-                <div onClick={handleSubmitQuiz} className="cursor-pointer text-gray-600 hover:text-gray-800 rounded-mid">
-                  <span className="text-sm font-bold">Submit Quiz  </span>
-                </div>
-               </div>
+           
+               <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleQuitQuiz}>
+                <span className="text-sm font-bold">Quit</span>
+                <XIcon className="h-3 w-3" strokeWidth={3} />
+              </div>
+              <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSubmitQuiz}>
+                <span className="text-sm font-bold">  Submit </span>
+                <ChevronRight className="h-3 w-3" strokeWidth={3} />
+              </div>
+              
            
             </div>
           </div>

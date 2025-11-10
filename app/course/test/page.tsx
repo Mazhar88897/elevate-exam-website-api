@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Flag, AlertTriangle, SkipForward, ChevronRight, CheckCircle2, FlagOffIcon } from "lucide-react"
+import { useState, useEffect, useRef } from 'react'
+import { Flag, AlertTriangle, SkipForward, ChevronRight, CheckCircle2, FlagOffIcon, XIcon } from "lucide-react"
 import Access from "@/components/dashboardItems/access"
 import Link from "next/link"
 import { useSupportModal } from "@/components/dashboardItems/support-modal"
@@ -66,6 +66,24 @@ export interface Course {
   questions: Question[];
 }
 
+// Progress component
+const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn("relative h-2 w-full overflow-hidden rounded-full bg-gray-200", className)}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full w-full flex-1 bg-green-500 transition-all"
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
+
 function QuizPage() {
   const { openSupportModal } = useSupportModal()
   const { openModal } = useModal()
@@ -76,6 +94,7 @@ function QuizPage() {
   const [progressData, setProgressData] = useState<ProgressApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasShownMessage = useRef(false)
   
   // Quiz state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -84,6 +103,9 @@ function QuizPage() {
   const [completedQuestions, setCompletedQuestions] = useState<boolean[]>([])
   const [flaggedQuestions, setFlaggedQuestions] = useState<boolean[]>([])
   const [allQuestionsCompleted, setAllQuestionsCompleted] = useState(false)
+  const [showQuitModal, setShowQuitModal] = useState(false)
+  const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [showStartModal, setShowStartModal] = useState(false)
 
   
   // Fetch questions from API 1
@@ -258,6 +280,31 @@ function QuizPage() {
     loadData()
   }, [])
 
+  // Show start/continue modal when data is loaded
+  useEffect(() => {
+    if (!loading && questions.length > 0 && !hasShownMessage.current) {
+      // Wait a bit for progressData to be set (it might be null for new tests)
+      const timer = setTimeout(() => {
+        setShowStartModal(true)
+        hasShownMessage.current = true
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, questions.length])
+
+  // Close start modal handler
+  const closeStartModal = () => {
+    setShowStartModal(false)
+  }
+
+  // Handle cancel - redirect to course page
+  const handleCancel = () => {
+    const course_id = sessionStorage.getItem('course_id')
+    if (course_id) {
+      router.push(`/course/${course_id}`)
+    }
+  }
+
   // Current question data
   const currentQuestion = questions[currentQuestionIndex]
   const totalQuestions = questions.length
@@ -271,23 +318,27 @@ function QuizPage() {
 
   // Handle option selection
   const handleOptionSelect = (optionIndex: number) => {
-    if (isAnswered) return
-
-    setSelectedOption(optionIndex)
-    setIsAnswered(true)
+    // Allow changing selection - if clicking the same option, deselect it
+    if (selectedOption === optionIndex) {
+      setSelectedOption(null)
+      setIsAnswered(false)
+    } else {
+      setSelectedOption(optionIndex)
+      setIsAnswered(true)
+    }
 
     // Update questions state
     setQuestions(prevQuestions => 
       prevQuestions.map((q, idx) => 
         idx === currentQuestionIndex 
-          ? { ...q, selectedOption: optionIndex }
+          ? { ...q, selectedOption: optionIndex === selectedOption ? null : optionIndex }
           : q
       )
     )
 
-    // Mark question as completed
+    // Mark question as completed if an option is selected
     const newCompletedQuestions = [...completedQuestions]
-    newCompletedQuestions[currentQuestionIndex] = true
+    newCompletedQuestions[currentQuestionIndex] = optionIndex !== selectedOption && optionIndex !== null
     setCompletedQuestions(newCompletedQuestions)
   }
 
@@ -326,8 +377,8 @@ function QuizPage() {
   }
 
   // Handle skip button
-  const handleSkip = () => {
-    submitHandler(questions[currentQuestionIndex].id, null as any, flaggedQuestions[currentQuestionIndex]) 
+  const handleSkip = async () => {
+    await submitHandler(questions[currentQuestionIndex].id, null as any, flaggedQuestions[currentQuestionIndex]) 
     setSelectedOption(null)
     setIsAnswered(false)
 
@@ -345,9 +396,12 @@ function QuizPage() {
       )
     )
 
-    // Move to next question
+    // Move to next question or submit if it's the last question
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
+    } else {
+      // If it's the last question, show submit confirmation modal
+      handleSubmitQuiz()
     }
   }
 
@@ -371,6 +425,71 @@ function QuizPage() {
   const getQuestionNumber = () => {
     return currentQuestionIndex + 1
   }
+
+  // Handle quit quiz button - show confirmation modal
+  const handleQuitQuiz = () => {
+    setShowQuitModal(true)
+  }
+
+  // Confirm quit quiz
+  const confirmQuitQuiz = async () => {
+    setShowQuitModal(false)
+    const course_id = sessionStorage.getItem('course_id')
+   
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${course_id}/quit/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `${sessionStorage.getItem('Authorization')}`
+      }
+    })
+    if (response.ok){
+      toast.success("Quiz Quitted.")
+      router.push(`/course/${course_id}`)
+    } else {
+      toast.error("Failed to quit quiz")
+    }
+  }
+
+  // Cancel quit quiz
+  const cancelQuitQuiz = () => {
+    setShowQuitModal(false)
+  }
+
+  // Handle submit quiz button - show confirmation modal
+  const handleSubmitQuiz = () => {
+    setShowSubmitModal(true)
+  }
+
+  // Confirm submit quiz
+  const confirmSubmitQuiz = async () => {
+    setShowSubmitModal(false)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/submit/`, {
+        method: "POST",
+        headers: {
+          "Authorization": `${sessionStorage.getItem('Authorization')}`
+        }
+      })
+      if (response.ok){
+        toast.success("Quiz submitted.")
+        router.push(`/course/test-analytics`)
+      } else {
+        console.error("Failed to submit quiz")
+        toast.error("Failed to submit quiz")
+      }
+    } catch (error) {
+      console.error("Error submitting quiz:", error)
+      toast.error("Failed to submit quiz")
+    }
+  }
+
+  // Cancel submit quiz
+  const cancelSubmitQuiz = () => {
+    setShowSubmitModal(false)
+  }
+
+  // Handle browser navigation/refresh
+
 
   // Show loading state
   if (loading) {
@@ -424,9 +543,94 @@ function QuizPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Main content */}        
-      <div className="flex-1 mx-4 flex flex-col">
+    <>
+      {/* Quit Confirmation Modal */}
+      {showQuitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Quit Quiz?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to quit? All your progress will be lost and you won't be able to recover it.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelQuitQuiz}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmQuitQuiz}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold"
+              >
+                Quit Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Confirmation Modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Submit Quiz?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to submit your quiz? Once submitted, you won't be able to make any changes to your answers.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelSubmitQuiz}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSubmitQuiz}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-semibold"
+              >
+                Submit Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Start/Continue Test Modal */}
+      {showStartModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              {progressData && progressData.attempted_questions > 0 ? 'Continue Test' : 'Start Test'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              You are now going to {progressData && progressData.attempted_questions > 0 ? 'continue' : 'start'} the full test of all the topics and subtopics of the course: <span className="font-semibold text-gray-900 dark:text-white">{sessionStorage.getItem('course_name') || 'the course'}</span>
+            </p>
+            <div className="flex gap-3 justify-between items-center">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={closeStartModal}
+                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-semibold"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex min-h-screen">
+        {/* Main content */}        
+        <div className="flex-1 mx-4 flex flex-col">
 
            
         {/* Premium banner */}
@@ -439,16 +643,16 @@ function QuizPage() {
         {/* Question content */}
         <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
           <div className="mb-4">
-            <Progress value={hundredPercentProgress ? 100 : getQuestionNumber()/totalQuestions*100} className="h-1.5 bg-gray-200 rounded-mid" />
+            <Progress value={(getQuestionNumber()-1)/totalQuestions*100} className="h-1.5 bg-gray-200 rounded-mid" />
           </div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between flex-wrap items-center mb-4">
             <div className="hidden sm:block text-sm font-black text-gray-600 dark:text-gray-300">
               Question <span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
             </div>
             <div className="block sm:hidden text-sm font-black text-gray-600 dark:text-gray-300">
             Q <span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
             </div>
-            <div className="flex">
+            <div className="flex space-x-2">
               <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSkip}>
                 <SkipForward className="h-3 mr-1 w-3" strokeWidth={3} />
                 <span className="text-sm font-bold">Skip</span>
@@ -472,6 +676,14 @@ function QuizPage() {
                </>
                }
               </div>
+              <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleQuitQuiz}>
+                <span className="text-sm font-bold">Quit</span>
+                <XIcon className="h-3 w-3" strokeWidth={3} />
+              </div>
+              <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSubmitQuiz}>
+                <span className="text-sm font-bold">  Submit </span>
+                <ChevronRight className="h-3 w-3" strokeWidth={3} />
+              </div>
               
             </div>
           </div>
@@ -486,35 +698,35 @@ function QuizPage() {
                 <div
                   key={idx}
                   className={cn(
-                    "border rounded-md p-3 cursor-pointer",
-                    selectedOption === idx &&
-                      idx === currentQuestion.correctOption &&
-                      "bg-green-50 dark:bg-black border-green-200",
-                    selectedOption === idx && idx !== currentQuestion.correctOption && "bg-red-50 dark:bg-black border-red-200",
-                    !isAnswered && "hover:border-gray-400",
+                    "border rounded-md p-3 cursor-pointer transition-colors",
+                    selectedOption === idx 
+                      ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500" 
+                      : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500",
                   )}
                   onClick={() => handleOptionSelect(idx)}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={cn(
-                        "w-5 h-5 rounded-mid text-sm font-semibold border mt-0.5 flex-shrink-0",
-                        selectedOption === idx && "",
+                        "w-5 h-5 rounded-mid text-sm font-semibold border mt-0.5 flex-shrink-0 transition-colors",
+                        selectedOption === idx 
+                          ? "border-blue-500 " 
+                          : "border-gray-400 dark:border-gray-500",
                       )}
                     />
-                    <div className="text-sm font-semibold">{option}</div>
+                    <div className={cn(
+                      "text-sm font-semibold",
+                      selectedOption === idx 
+                        ? "text-blue-700 dark:text-blue-300" 
+                        : "text-gray-800 dark:text-gray-200"
+                    )}>{option}</div>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Explanation */}
-            {isAnswered && (
-              <div className="mt-4 bg-green-50 dark:bg-black border border-green-200 rounded-md p-4">
-                <h3 className="font-semibold text-sm mb-2">Explanation:</h3>
-                <p className="font-semibold text-sm">{currentQuestion.explanation}</p>
-              </div>
-            )}
+           
           </div>
 
           {/* Continue button */}
@@ -536,32 +748,16 @@ function QuizPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
-
-
-const Progress = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
->(({ className, value, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn("relative h-2 w-full overflow-hidden rounded-full bg-gray-200", className)}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-green-500 transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </ProgressPrimitive.Root>
-))
-Progress.displayName = ProgressPrimitive.Root.displayName
 
 // Mobile Tabs Component
 
 // Main Component
 export default function ResponsiveView() {
   return (
+  
     <SupportModalProvider>
       <ModalProvider>
         <QuizPage />

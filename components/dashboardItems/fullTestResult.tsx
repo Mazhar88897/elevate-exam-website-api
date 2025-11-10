@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckIcon, XIcon, ChevronDownIcon, ChevronUpIcon, Flag, Check, X, ChevronRight, ChevronUp, ChevronDown } from "lucide-react"
+import { CheckIcon, XIcon, ChevronDownIcon, ChevronUpIcon, Flag, Check, X, ChevronRight, ChevronUp, ChevronDown, FlagIcon } from "lucide-react"
 import Image from "next/image"
 
 // Semicircular Progress Bar Component
@@ -68,7 +68,7 @@ function SemicircularProgress({
 }
 
 // Define question type
-type QuestionStatus = "correct" | "incorrect" | "flagged" | "skipped"
+type QuestionStatus = "correct" | "incorrect" | "skipped"
 
 interface Question {
   id: number
@@ -77,6 +77,7 @@ interface Question {
   category: string
   explanation: string
   correct_option: string
+  isFlagged: boolean
 }
 
 // API Response Interfaces
@@ -110,7 +111,7 @@ interface APIProgressResponse {
   flagged_count: number
   skipped_count: number
   correct_count: number
-  last_viewed_question: number
+  last_viewed_question: number | null
   is_submitted: boolean
   questions: APIProgressQuestion[]
 }
@@ -131,6 +132,7 @@ export default function QuizResultsPage() {
   const [progressData, setProgressData] = useState<APIProgressResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [noAnalytics, setNoAnalytics] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
 
   // Toggle explanation visibility
@@ -187,11 +189,31 @@ export default function QuizResultsPage() {
           }
 
           if (!progressResponse.ok) {
+            // Check for 404 or "No analytics found"
+            if (progressResponse.status === 404) {
+              const errorData = await progressResponse.json().catch(() => ({}))
+              if (errorData.detail === "No analytics found" || errorData.detail?.includes("No analytics")) {
+                setNoAnalytics(true)
+                setLoading(false)
+                return
+              }
+            }
             throw new Error(`Progress API failed: ${progressResponse.status} ${progressResponse.statusText}`)
           }
 
           questionsData = await questionsResponse.json()
           const progressWrapper: APIProgressWrapper = await progressResponse.json()
+          
+          // Check if response contains "No analytics found" message
+          if (progressWrapper && typeof progressWrapper === 'object' && 'detail' in progressWrapper) {
+            const detail = (progressWrapper as any).detail
+            if (detail === "No analytics found" || detail?.includes("No analytics")) {
+              setNoAnalytics(true)
+              setLoading(false)
+              return
+            }
+          }
+          
           // Extract data from the wrapper
           progressData = progressWrapper.data
 
@@ -208,10 +230,37 @@ export default function QuizResultsPage() {
           })
 
           if (!response.ok) {
+            // Check for 404 status
+            if (response.status === 404) {
+              const errorData = await response.json().catch(() => ({}))
+              if (errorData.detail === "No analytics found" || errorData.detail?.includes("No analytics") || errorData.progress?.detail === "No analytics found") {
+                setNoAnalytics(true)
+                setLoading(false)
+                return
+              }
+            }
             throw new Error(`API proxy failed: ${response.status} ${response.statusText}`)
           }
 
           const proxyData = await response.json()
+          
+          // Check for "No analytics found" in proxy response
+          if (proxyData.progress && typeof proxyData.progress === 'object' && 'detail' in proxyData.progress) {
+            const detail = proxyData.progress.detail
+            if (detail === "No analytics found" || detail?.includes("No analytics")) {
+              setNoAnalytics(true)
+              setLoading(false)
+              return
+            }
+          }
+          
+          // Also check if progress is missing entirely (which could indicate no analytics)
+          if (!proxyData.progress) {
+            setNoAnalytics(true)
+            setLoading(false)
+            return
+          }
+          
           questionsData = proxyData.questions
           // Handle both old and new format for proxy
           if (proxyData.progress?.data) {
@@ -234,10 +283,14 @@ export default function QuizResultsPage() {
           const progressQuestion = progressData.questions.find(pq => pq.question === apiQuestion.id)
           
           let status: QuestionStatus = "skipped"
+          
+          // Determine status based on answer (not flagged status)
           if (progressQuestion && progressQuestion.selected_option !== null) {
+            // Check if answer is correct or incorrect
             status = progressQuestion.selected_option === apiQuestion.correct_option ? "correct" : "incorrect"
-          } else if (progressQuestion?.is_flagged) {
-            status = "flagged"
+          } else {
+            // No answer selected = skipped
+            status = "skipped"
           }
 
           // Get correct option text based on correct_option number
@@ -249,7 +302,8 @@ export default function QuizResultsPage() {
             status,
             category: sessionStorage.getItem('course_name') || "", // You can modify this based on your needs
             explanation: apiQuestion.explanation,
-            correct_option: correctOptionText
+            correct_option: correctOptionText,
+            isFlagged: progressQuestion?.is_flagged || false
           }
         })
 
@@ -295,6 +349,33 @@ export default function QuizResultsPage() {
                 <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
               <div className="text-lg text-gray-600">Loading quiz results...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // No analytics found state
+  if (noAnalytics) {
+    return (
+      <div className="min-h-screen p-6 md:p-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <Image 
+                src="/nothing.png" 
+                alt="Not Found" 
+                width={200} 
+                height={200} 
+                className="mx-auto mb-4" 
+              />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                Test Not Submitted
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Attempt full test first
+              </p>
             </div>
           </div>
         </div>
@@ -450,41 +531,73 @@ export default function QuizResultsPage() {
                 <Image src="/FAQ.svg" alt="FAQ" width="75" height="75" className="ml-[-30px]" />
                 <span className="text-sm flex font-semibold ml-[-30px]"><p className="hidden sm:block">Question No. </p>{question.id}</span>
 
-                {question.status === "correct" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-green-600 rounded-sm flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm hidden sm:block font-semibold text-green-700">Correct</span>
-                  </div>
-                )}
-
-                {question.status === "incorrect" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-red-600 rounded-sm flex items-center justify-center">
-                      <X className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm hidden sm:block font-semibold text-red-600">Incorrect</span>
-                  </div>
-                )}
-
-                {question.status === "skipped" && (
-                  progressData?.last_viewed_question && progressData.last_viewed_question >= question.id ? (
-                    <div className="flex items-center gap-1 ml-3">
-                      <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
-                        <ChevronRight className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-2 ml-3">
+                  {/* Status badge (correct/incorrect/skipped) */}
+                  {question.status === "correct" && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-green-600 rounded-sm flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-600">Skipped</span>
+                      <span className="text-sm hidden sm:block font-semibold text-green-700">Correct</span>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-1 ml-3">
-                      <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
-                        <ChevronRight className="w-4 h-4 text-white" />
+                  )}
+
+                  {question.status === "incorrect" && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-red-600 rounded-sm flex items-center justify-center">
+                        <X className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-600">Unanswered</span>
+                      <span className="text-sm hidden sm:block font-semibold text-red-600">Incorrect</span>
                     </div>
-                  )
-                )}
+                  )}
+
+                  {question.status === "skipped" && (
+                    progressData?.last_viewed_question && progressData.last_viewed_question >= question.id ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
+                      </div>
+                    )
+                  )}
+
+
+{/* {question.status === "skipped" && (
+                    progressData?.last_viewed_question && progressData.last_viewed_question >= question.id ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-600">Unanswered</span>
+                      </div>
+                    )
+                  )} */}
+
+                  {/* Flagged indicator (shown alongside status if flagged) */}
+                  {question.isFlagged && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-yellow-500 rounded-sm flex items-center justify-center">
+                        <Flag className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-sm hidden sm:block font-semibold text-yellow-700">Flagged</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Right side: Category */}
@@ -602,7 +715,7 @@ function Component({
     { browser: "Correct", visitors: correctCount, fill: "#86efac" },   // bg-green-300
     { browser: "Wrong", visitors: incorrectCount, fill: "#fecaca" },     // bg-gray-300
     { browser: "Skipped", visitors: skippedCount, fill: "#d1d5db" },   // bg-red-200
-    { browser: "Flagged", visitors: flaggedCount, fill: "#f3f4f6" },   // bg-gray-100
+    { browser: "Flagged", visitors: flaggedCount, fill: "#ffffdd" },   // bg-gray-100
   ];
 
   return (
@@ -651,9 +764,9 @@ function Component({
           </div>
 
           <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-gray-700 rounded-sm flex items-center justify-center">
-                    <ChevronRight className="w-4 h-4 text-white" strokeWidth={2.5} />
-                    </div>
+          <div className="w-5 h-5 bg-yellow-500 rounded-sm flex items-center justify-center">
+                        <FlagIcon className="w-4 h-4 text-white" />
+                      </div>
             <span className="text-sm flex">flagged {flaggedCount} <span className="hidden sm:block ml-1">Questions</span>     </span>
           </div>
 
