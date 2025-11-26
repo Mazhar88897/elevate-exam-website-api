@@ -155,7 +155,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                 No notifications
               </h3>
               <p className="text-gray-500 text-xs dark:text-gray-400">
-                You're all caught up! Check back later for new updates.
+                You&apos;re all caught up! Check back later for new updates.
               </p>
             </div>
           )}
