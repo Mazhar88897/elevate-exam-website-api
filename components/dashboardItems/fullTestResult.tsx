@@ -344,9 +344,9 @@ export default function QuizResultsPage() {
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-4">
               <div className="flex space-x-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce"></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
               <div className="text-lg text-gray-600">Loading quiz results...</div>
             </div>

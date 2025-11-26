@@ -173,9 +173,9 @@ export default function AddDomainPage() {
             <div className="w-full  mr-8 my-6 sm:my-5">
               <div className="text-center py-8">
                 <div className="flex justify-center space-x-1">
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function AddDomainPage() {
                       <h3 className="text-lg font-bold">{domain.name}</h3>
                     </div>
                     
-                    <p className="text-sm text-yellow-500 dark:text-gray-400 mb-4">
+                    <p className="text-sm text-xcolor dark:text-gray-400 mb-4">
                       {coursesCount} course{coursesCount !== 1 ? 's' : ''} included
                     </p>
 
@@ -250,7 +250,7 @@ export default function AddDomainPage() {
                       <ul className="space-y-2">
                         {allCourses.slice(0, 3).map((course) => (
                           <li key={course.id} className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <Check className="w-4 h-4 text-[#ffd404]" />
+                            <Check className="w-4 h-4 text-xcolor" />
                             {course.name}
                           </li>
                         ))}
@@ -265,7 +265,7 @@ export default function AddDomainPage() {
                     {/* Pricing */}
                     <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-[#ffd404]">€{PRICING.monthly}</span>
+                        <span className="text-2xl font-bold text-xcolor">€{PRICING.monthly}</span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">/month</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
@@ -278,14 +278,14 @@ export default function AddDomainPage() {
                   <div className="px-6 pb-6 pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
                     <button
                       onClick={() => handlePurchaseClick(domain, 'monthly')}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-[#ffd404] hover:bg-[#ffd404] hover:text-black text-[#ffd404] font-semibold rounded-md transition-colors"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-xcolor hover:bg-xcolor hover:text-black text-xcolor font-semibold rounded-md transition-colors"
                     >
                       <WalletIcon className="w-4 h-4" />
                       <span>Buy Monthly</span>
                     </button>
                     <button
                       onClick={() => handlePurchaseClick(domain, 'annually')}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#ffd404] hover:bg-yellow-400 text-black font-semibold rounded-md transition-colors"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-xcolor hover:bg-xcolor text-black font-semibold rounded-md transition-colors"
                     >
                       <CreditCardIcon className="w-4 h-4" />
                       <span>Buy Annual <span className="text-xs text-gray-500"></span></span>
@@ -325,7 +325,7 @@ export default function AddDomainPage() {
                           <ul className="space-y-1">
                             {allCourses.map((course) => (
                               <li key={course.id} className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                                <Check className="w-3 h-3 text-[#ffd404]" />
+                                <Check className="w-3 h-3 text-xcolor" />
                                 {course.name}
                               </li>
                             ))}
@@ -338,7 +338,7 @@ export default function AddDomainPage() {
                   <div className="border-t pt-3 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Price:</span>
-                      <span className="text-xl font-bold text-[#ffd404]">
+                      <span className="text-xl font-bold text-xcolor">
                         €{PRICING[selectedPlan].toFixed(2)}
                         {selectedPlan === 'monthly' ? '/month' : '/year'}
                       </span>
@@ -363,7 +363,7 @@ export default function AddDomainPage() {
               <Button
                 onClick={handleConfirmPurchase}
                 disabled={processingPurchase}
-                className="bg-[#ffd404] hover:bg-yellow-400 text-black font-semibold"
+                className="bg-xcolor hover:bg-xcolor text-black font-semibold"
               >
                 {processingPurchase ? (
                   <>

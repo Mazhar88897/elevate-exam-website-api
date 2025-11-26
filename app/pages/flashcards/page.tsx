@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
-import { Star, X, ArrowLeft, ArrowRight, Shuffle, ChevronRight, ChevronDown } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Star, X, ArrowLeft, ArrowRight, Shuffle, ChevronRight, ChevronDown, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
 import Image from "next/image"
+import { toast } from "react-hot-toast"
 
 // API data interfaces
 interface FlashcardAPI {
@@ -102,6 +103,7 @@ Button.displayName = "Button"
 
 // Flashcard data structure
 type Flashcard = {
+  id: number
   question: string
   answer: string
 }
@@ -129,6 +131,7 @@ const FlashcardWithFlip = ({
   onFlip,
   onFavorite,
   favorited,
+  isFavoriteLoading,
 }: {
   front: string
   back: string
@@ -136,6 +139,7 @@ const FlashcardWithFlip = ({
   onFlip: () => void
   onFavorite: () => void
   favorited: boolean
+  isFavoriteLoading: boolean
 }) => {
   return (
     <div className="w-full h-full cursor-pointer" onClick={onFlip} style={styles.perspective}>
@@ -174,11 +178,23 @@ const FlashcardWithFlip = ({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onFavorite()
+              if (!isFavoriteLoading) {
+                onFavorite()
+              }
             }}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 z-10 transition-colors"
+            disabled={isFavoriteLoading}
+            className={cn(
+              "absolute top-4 right-4 z-10 transition-colors",
+              isFavoriteLoading 
+                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed" 
+                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            )}
           >
-            <Star className={cn("h-6 w-6", favorited && "fill-gray-600 text-gray-600 dark:fill-gray-200 dark:text-gray-200")} />
+            {isFavoriteLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <Star className={cn("h-6 w-6", favorited && "fill-gray-600 text-gray-600 dark:fill-gray-200 dark:text-gray-200")} />
+            )}
           </button>
           <div className="relative z-10">
             <div className="text-2xl font-bold text-center text-gray-900 dark:text-white">{back}</div>
@@ -197,9 +213,19 @@ function FlashcardContent() {
   const [courseData, setCourseData] = useState<CourseAPI | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Ref to track if fetch has been initiated (prevents duplicate fetches in Strict Mode)
+  const hasFetchedRef = React.useRef(false)
 
   // Fetch API data
   useEffect(() => {
+    // Prevent duplicate fetches (especially in React Strict Mode)
+    if (hasFetchedRef.current) {
+      return
+    }
+    
+    hasFetchedRef.current = true
+    
     const fetchFlashcardsData = async () => {
       try {
         setLoading(true)
@@ -233,6 +259,8 @@ function FlashcardContent() {
       } catch (err) {
         console.error('Error fetching flashcards data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load flashcards')
+        // Reset ref on error so it can retry if needed
+        hasFetchedRef.current = false
       } finally {
         setLoading(false)
       }
@@ -241,23 +269,40 @@ function FlashcardContent() {
     fetchFlashcardsData()
   }, [])
 
-  // Convert API data to component format
-  const myCourse: Course = courseData ? {
-    courseName: courseData.name,
-    chapters: courseData.chapters.map(chapter => ({
-      chapterName: chapter.name,
-      subchapters: chapter.subtopics.map(subtopic => ({
-        subchapterName: subtopic.name,
-        flashcards: subtopic.flashcards.map(flashcard => ({
-          question: flashcard.primary_text,
-          answer: flashcard.secondary_text
-        }))
-      }))
-    }))
-  } : {
-    courseName: "Loading...",
-    chapters: []
-  }
+  // Convert API data to component format while skipping empty subchapters
+  const myCourse: Course = useMemo(() => {
+    if (!courseData) {
+      return {
+        courseName: "Loading...",
+        chapters: [],
+      }
+    }
+
+    const filteredChapters = courseData.chapters
+      .map((chapter) => {
+        const subchapters = chapter.subtopics
+          .filter((subtopic) => subtopic.flashcards && subtopic.flashcards.length > 0)
+          .map((subtopic) => ({
+            subchapterName: subtopic.name,
+            flashcards: subtopic.flashcards.map((flashcard) => ({
+              id: flashcard.id,
+              question: flashcard.primary_text,
+              answer: flashcard.secondary_text,
+            })),
+          }))
+
+        return {
+          chapterName: chapter.name,
+          subchapters,
+        }
+      })
+      .filter((chapter) => chapter.subchapters.length > 0)
+
+    return {
+      courseName: courseData.name,
+      chapters: filteredChapters,
+    }
+  }, [courseData])
 
   // Fallback course data for when API is not available
 
@@ -267,6 +312,7 @@ function FlashcardContent() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [favorited, setFavorited] = useState(false)
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false)
   const [isChanging, setIsChanging] = useState(false)
   const [expandedChapters, setExpandedChapters] = useState<Record<number, boolean>>({})
 
@@ -275,13 +321,18 @@ function FlashcardContent() {
 
   // Update completedCards when courseData changes
   useEffect(() => {
-    if (courseData) {
-      const newCompletedCards = courseData.chapters.map((chapter) =>
-        chapter.subtopics.map((subtopic) => Array(subtopic.flashcards.length).fill(false)),
+    if (myCourse.chapters.length > 0) {
+      const newCompletedCards = myCourse.chapters.map((chapter) =>
+        chapter.subchapters.map((subchapter) => Array(subchapter.flashcards.length).fill(false)),
       )
       setCompletedCards(newCompletedCards)
+      setCurrentChapterIndex(0)
+      setCurrentSubchapterIndex(0)
+      setCurrentCardIndex(0)
+    } else {
+      setCompletedCards([])
     }
-  }, [courseData])
+  }, [myCourse])
 
   // Loading state
   if (loading) {
@@ -289,9 +340,9 @@ function FlashcardContent() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="flex justify-center space-x-1 mb-4">
-            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+            <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
           </div>
           <div className="text-lg">Loading flashcards...</div>
         </div>
@@ -312,7 +363,7 @@ function FlashcardContent() {
   }
 
   // No data state
-  if (!courseData || courseData.chapters.length === 0) {
+  if (!courseData || myCourse.chapters.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -325,8 +376,11 @@ function FlashcardContent() {
 
   // Current flashcard
   const currentChapter = myCourse.chapters[currentChapterIndex]
-  const currentSubchapter = currentChapter.subchapters[currentSubchapterIndex]
-  const currentFlashcard = currentSubchapter.flashcards[currentCardIndex]
+  const currentSubchapter = currentChapter?.subchapters[currentSubchapterIndex]
+  const currentFlashcard = currentSubchapter?.flashcards[currentCardIndex]
+
+  const currentChapterLabel = currentChapter?.chapterName ?? "N/A"
+  const currentSubchapterLabel = currentSubchapter?.subchapterName ?? "N/A"
 
   // Calculate total flashcards
   const totalFlashcards = myCourse.chapters.reduce(
@@ -340,6 +394,10 @@ function FlashcardContent() {
     let cardNumber = 1
 
     // Count cards in previous chapters
+    if (!currentChapter || !currentSubchapter) {
+      return 0
+    }
+
     for (let i = 0; i < currentChapterIndex; i++) {
       for (let j = 0; j < myCourse.chapters[i].subchapters.length; j++) {
         cardNumber += myCourse.chapters[i].subchapters[j].flashcards.length
@@ -370,7 +428,7 @@ function FlashcardContent() {
 
     // Overall progress
     const totalCompleted = completedCards.flat(2).filter(Boolean).length
-    const overallProgress = (totalCompleted / totalFlashcards) * 100
+    const overallProgress = totalFlashcards > 0 ? (totalCompleted / totalFlashcards) * 100 : 0
 
     // Chapter progress
     const chapterProgress = myCourse.chapters.map((chapter, chIdx) => {
@@ -415,6 +473,7 @@ function FlashcardContent() {
   const changeCard = (chapterIdx: number, subchapterIdx: number, cardIdx: number) => {
     setIsChanging(true)
     setFlipped(false)
+    setFavorited(false) // Reset favorited state when changing cards
 
     setTimeout(() => {
       setCurrentChapterIndex(chapterIdx)
@@ -425,6 +484,10 @@ function FlashcardContent() {
   }
 
   const handlePrevious = () => {
+    if (!currentChapter || !currentSubchapter) {
+      return
+    }
+
     if (currentCardIndex > 0) {
       // Previous card in same subchapter
       changeCard(currentChapterIndex, currentSubchapterIndex, currentCardIndex - 1)
@@ -452,7 +515,11 @@ function FlashcardContent() {
 
   const handleNext = () => {
     // Mark current card as completed
-    const newCompletedCards = [...completedCards]
+    if (!currentChapter || !currentSubchapter || !currentFlashcard) {
+      return
+    }
+
+    const newCompletedCards = completedCards.map((chapter) => chapter.map((subchapter) => [...subchapter]))
     newCompletedCards[currentChapterIndex][currentSubchapterIndex][currentCardIndex] = true
     setCompletedCards(newCompletedCards)
 
@@ -473,10 +540,20 @@ function FlashcardContent() {
 
   // Handle shuffle
   const handleShuffle = () => {
+    if (myCourse.chapters.length === 0) {
+      return
+    }
+
     const randomChapterIndex = Math.floor(Math.random() * myCourse.chapters.length)
     const randomChapter = myCourse.chapters[randomChapterIndex]
+    if (randomChapter.subchapters.length === 0) {
+      return
+    }
     const randomSubchapterIndex = Math.floor(Math.random() * randomChapter.subchapters.length)
     const randomSubchapter = randomChapter.subchapters[randomSubchapterIndex]
+    if (randomSubchapter.flashcards.length === 0) {
+      return
+    }
     const randomCardIndex = Math.floor(Math.random() * randomSubchapter.flashcards.length)
     changeCard(randomChapterIndex, randomSubchapterIndex, randomCardIndex)
   }
@@ -487,8 +564,52 @@ function FlashcardContent() {
   }
 
   // Handle favorite toggle
-  const handleFavorite = () => {
-    setFavorited(!favorited)
+  const handleFavorite = async () => {
+    if (!currentFlashcard || !courseData) return
+    
+    setIsFavoriteLoading(true)
+    try {
+      const courseId = sessionStorage.getItem('course_id')
+      const token = sessionStorage.getItem('Authorization')
+      
+      if (!courseId || !token) {
+        throw new Error('Missing course ID or authorization token')
+      }
+
+      // Get the actual flashcard ID from the API data
+      const currentChapterAPI = courseData.chapters[currentChapterIndex]
+      const currentSubtopicAPI = currentChapterAPI?.subtopics[currentSubchapterIndex]
+      const currentFlashcardAPI = currentSubtopicAPI?.flashcards[currentCardIndex]
+      
+      if (!currentFlashcardAPI) {
+        throw new Error('Flashcard not found')
+      }
+      // setFavorited(!favorited)
+      toast.success('Added to favourites!')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/favorites/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          flashcard: currentFlashcardAPI.id,
+          course: parseInt(courseId),
+        }),
+      })
+
+      if (!response.ok) {
+        console.log('Failed to update favorite')
+      }
+
+      // Toggle the favorited state on success
+    
+    } catch (err) {
+      console.error('Error updating favorite:', err)
+      // Optionally show a toast error message
+    } finally {
+      setIsFavoriteLoading(false)
+    }
   }
 
   // Handle chapter selection
@@ -500,6 +621,8 @@ function FlashcardContent() {
   const handleSubchapterSelect = (chapterIndex: number, subchapterIndex: number) => {
     changeCard(chapterIndex, subchapterIndex, 0)
   }
+
+  const courseId = sessionStorage.getItem('course_id') || ''
 
   return (
     <div className="flex min-h-screen">
@@ -520,12 +643,12 @@ function FlashcardContent() {
                   onClick={() => handleChapterSelect(chapterIdx)}
                 >
                   {expandedChapters[chapterIdx] ? (
-                    <ChevronDown className="h-4 w-4 font-black text-slate-800 dark:text-slate-300" />
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 font-black text-slate-800 dark:text-slate-300" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 font-black text-slate-800 dark:text-slate-300" />
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 font-black text-slate-800 dark:text-slate-300" />
                   )}
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-300">{chapter.chapterName}</span>
-                  <div
+                  <span className="ml-2 text-sm font-bold text-slate-800 dark:text-slate-300">{chapter.chapterName}</span>
+                  {/* <div
                     className={cn(
                       "ml-auto w-5 h-5 rounded-full border-4 flex items-center justify-center",
                       (progress.chapters[chapterIdx] ?? 0) === 100
@@ -534,7 +657,7 @@ function FlashcardContent() {
                           ? "bg-white border-green-500"
                           : "bg-white border-gray-300",
                     )}
-                  />
+                  /> */}
                 </div>
 
                 {/* Chapter progress bar */}
@@ -547,7 +670,8 @@ function FlashcardContent() {
                   <div className="ml-6 space-y-1 mt-2">
                     {chapter.subchapters.map((subchapter, subchapterIdx) => {
                       // Calculate completed cards for this subchapter
-                      const completedCount = completedCards[chapterIdx][subchapterIdx].filter(Boolean).length
+                      const completedEntries = completedCards[chapterIdx]?.[subchapterIdx] ?? []
+                      const completedCount = completedEntries.filter(Boolean).length
                       const totalCount = subchapter.flashcards.length
 
                       return (
@@ -582,9 +706,11 @@ function FlashcardContent() {
             >
               Add Notes
             </div>
-            <div className="text-xm font-bold bg-black text-white dark:bg-white dark:text-black px-2 rounded-mid">
+            <Link href={`/course/flashcards/${courseId}`}>
+            <div className="text-xm hover:cursor-pointer font-bold bg-black text-white dark:bg-white dark:text-black px-2 rounded-mid">
               Favourites
             </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -603,7 +729,7 @@ function FlashcardContent() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-800 dark:text-gray-300 border-2 border-gray-400 text-xs font-bold px-3 py-1 rounded-full">
-                    {currentChapter.chapterName} - {currentSubchapter.subchapterName}
+                  {currentChapterLabel} - {currentSubchapterLabel}
                   </span>
                 </div>
               </div>
@@ -624,14 +750,23 @@ function FlashcardContent() {
                   className="w-full h-full"
                 >
                   <div className="w-full dark:bg-black border border-gray-300 h-full min-h-[200px] font-semibold text-slate-800 shadow-xl rounded-xl overflow-hidden">
-                    <FlashcardWithFlip
-                      front={currentFlashcard.question}
-                      back={currentFlashcard.answer}
-                      flipped={flipped}
-                      onFlip={handleCardFlip}
-                      onFavorite={handleFavorite}
-                      favorited={favorited}
-                    />
+                    {currentFlashcard ? (
+                      <FlashcardWithFlip
+                        front={currentFlashcard.question}
+                        back={currentFlashcard.answer}
+                        flipped={flipped}
+                        onFlip={handleCardFlip}
+                        onFavorite={handleFavorite}
+                        favorited={favorited}
+                        isFavoriteLoading={isFavoriteLoading}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center px-8 text-center">
+                        <p className="text-base font-semibold text-gray-600 dark:text-gray-300">
+                          No flashcards are available in this selection yet.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </AnimatePresence>

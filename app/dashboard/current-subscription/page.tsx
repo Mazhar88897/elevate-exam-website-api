@@ -202,9 +202,9 @@ export default function CurrentSubscriptionsPage() {
             <div className="w-full mr-8 my-6 sm:my-5">
               <div className="text-center py-8">
                 <div className="flex justify-center space-x-1">
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -245,7 +245,7 @@ export default function CurrentSubscriptionsPage() {
             <p className="text-gray-600 dark:text-gray-400">No active subscriptions found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subscriptions.map((subscription) => {
               const domain = domains[subscription.domain]
               const domainName = domain?.name || `Domain #${subscription.domain}`
@@ -255,101 +255,98 @@ export default function CurrentSubscriptionsPage() {
               return (
                 <div
                   key={subscription.id}
-                  className="relative flex flex-col border border-gray-800 dark:border-white rounded-[6px] hover:border-gray-100 dark:hover:border-gray-400 bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-[#242434] transition-colors overflow-hidden"
+                  className="relative flex flex-col border border-gray-300 dark:border-gray-700 rounded-lg hover:border-gray-400 dark:hover:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all shadow-sm hover:shadow-md overflow-hidden"
                 >
                   {/* Subscription Card Content */}
-                  <div className="p-6">
+                  <div className="p-4">
                     {/* Domain Name and Status */}
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold">{domainName}</h3>
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-semibold truncate pr-2">{domainName}</h3>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         {subscription.status === 'active' && !isCancelled ? (
-                          <span className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-semibold">
+                          <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-xs font-medium">
                             <CheckCircle2 className="w-3 h-3" />
                             Active
                           </span>
                         ) : isCancelled ? (
-                          <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs font-semibold">
+                          <span className="flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-md text-xs font-medium">
                             <AlertCircle className="w-3 h-3" />
                             Cancelled
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded text-xs font-semibold">
+                          <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-md text-xs font-medium">
                             {subscription.status}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Plan Interval */}
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CreditCard className="w-4 h-4" />
-                        <span className="font-semibold capitalize">
-                          {subscription.plan_interval === 'month' ? 'Monthly' : 'Annual'} Plan
+                    {/* Plan Interval and Days Remaining - Compact Row */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span className="font-medium capitalize">
+                          {subscription.plan_interval === 'month' ? 'Monthly' : 'Annual'}
+                        </span>
+                      </div>
+                      <div className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-md">
+                        <span className="text-sm font-bold text-xcolor">
+                          {daysRemaining > 0 ? `${daysRemaining}d` : 'Expired'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Period Dates */}
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-[#ffd404]" />
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Last paid at: </span>
-                          <span className="font-medium">
-                            {formatDate(subscription.current_period_start)}
+                    {/* Period Dates - Compact */}
+                    <div className="mb-3 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Calendar className="w-3.5 h-3.5 text-xcolor flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-gray-500 dark:text-gray-500">Start: </span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
+                            {new Date(subscription.current_period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-[#ffd404]" />
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Ends: </span>
-                          <span className="font-medium">
-                            {formatDate(subscription.current_period_end)}
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Calendar className="w-3.5 h-3.5 text-xcolor flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-gray-500 dark:text-gray-500">End: </span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
+                            {new Date(subscription.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                          <span className="ml-2 text-red-500 dark:text-gray-500">
+                            {isCancelled ? 'Subscription ended' : ''}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Days Remaining */}
-                    <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Days Remaining:</span>
-                        <span className="text-lg font-bold text-[#ffd404]">
-                          {daysRemaining > 0 ? `${daysRemaining} days` : 'Expired'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Cancellation Notice */}
-                    {isCancelled && (
-                      <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5" />
-                          <div className="text-sm text-orange-800 dark:text-orange-200">
-                            <p className="font-semibold">Subscription will end on {formatDate(subscription.current_period_end)}</p>
-                            <p className="mt-1">This subscription will not auto-renew for the next {subscription.plan_interval}.</p>
-                          </div>
+                    {/* Cancellation Notice - Compact */}
+                    {/* {isCancelled && (
+                      <div className="mb-3 px-2 py-1.5 bg-orange-50/50 dark:bg-orange-900/10 rounded-md">
+                        <div className="flex items-center gap-1.5">
+                          <AlertCircle className="w-3 h-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                          <span className="text-xs text-orange-700 dark:text-orange-300 font-medium">
+                            Ends {new Date(subscription.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • No auto-renewal
+                          </span>
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Action Button */}
-                  <div className="px-6 pb-6 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700">
                     {!isCancelled && subscription.status === 'active' ? (
                       <button
                         onClick={() => handleCancelClick(subscription)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-red-500 hover:bg-red-500 hover:text-white text-red-500 font-semibold rounded-md transition-colors"
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 border border-red-500 hover:bg-red-500 hover:text-white text-red-500 font-medium rounded-md transition-colors text-sm"
                       >
-                        <XCircle className="w-4 h-4" />
-                        <span>Cancel Subscription</span>
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Cancel</span>
                       </button>
                     ) : (
-                      <div className="w-full px-4 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
-                        {isCancelled ? 'you will be able resubscribe after the end of the current period' : 'Subscription inactive'}
+                      <div className="w-full px-3 py-1.5 text-center text-xs text-gray-500 dark:text-gray-400">
+                        {isCancelled ? 'Resubscribe after period ends' : 'Inactive'}
                       </div>
                     )}
                   </div>

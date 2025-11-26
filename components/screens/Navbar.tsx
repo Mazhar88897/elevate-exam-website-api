@@ -24,7 +24,6 @@ const navItems: NavItem[] = [
     hasDropdown: true,
     submenu: [
       { title: "Exams", href: "/main/courses" },
-      { title: "Exams Details", href: "/main/courses/single-course" },
     ],
   },
   { title: "How It Works", href: "/main/platform" },
@@ -43,7 +42,7 @@ const navItems: NavItem[] = [
     hasDropdown: true,
     submenu: [
       { title: "Blog Grid", href: "/main/blogs" },
-      { title: "Blog Single", href: "/main/blogs/single-blog" },
+     
     ],
   },
   { title: "Contact", href: "/main/contact" },

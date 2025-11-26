@@ -204,9 +204,9 @@ export default function CurrentSubscriptionsPage() {
             <div className="w-full mr-8 my-6 sm:my-5">
               <div className="text-center py-8">
                 <div className="flex justify-center space-x-1">
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -257,13 +257,13 @@ export default function CurrentSubscriptionsPage() {
               return (
                 <div
                   key={subscription.id}
-                  className="group relative flex flex-col border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#1a1a1a] hover:border-[#ffd404]/50 dark:hover:border-[#ffd404]/30 hover:shadow-lg dark:hover:shadow-[#ffd404]/10 transition-all duration-300 overflow-hidden"
+                  className="group relative flex flex-col border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#1a1a1a] hover:border-xcolor/50 dark:hover:border-xcolor/30 hover:shadow-lg dark:hover:shadow-xcolor/10 transition-all duration-300 overflow-hidden"
                 >
                   {/* Gradient Accent Bar */}
                   <div className={`absolute top-0 left-0 right-0 h-1 ${
                     isCancelled 
                       ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
-                      : 'bg-gradient-to-r from-[#ffd404] to-yellow-400'
+                      : 'bg-gradient-to-r from-xcolor to-xcolor'
                   }`} />
 
                   {/* Card Content */}
@@ -303,8 +303,8 @@ export default function CurrentSubscriptionsPage() {
                     {/* Period Information */}
                     <div className="space-y-3 mb-5">
                       <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#ffd404]/10 dark:bg-[#ffd404]/20 flex items-center justify-center">
-                          <Calendar className="w-5 h-5 text-[#ffd404]" />
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-xcolor/10 dark:bg-xcolor/20 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-xcolor" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Current Period</p>
@@ -329,10 +329,10 @@ export default function CurrentSubscriptionsPage() {
 
                     {/* Days Remaining Badge */}
                     <div className="mb-5">
-                      <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#ffd404]/10 to-yellow-400/10 dark:from-[#ffd404]/20 dark:to-yellow-400/20 rounded-lg border border-[#ffd404]/20 dark:border-[#ffd404]/30">
-                        <Clock className="w-4 h-4 text-[#ffd404]" />
+                      <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-xcolor/10 to-xcolor/10 dark:from-xcolor/20 dark:to-xcolor/20 rounded-lg border border-xcolor/20 dark:border-xcolor/30">
+                        <Clock className="w-4 h-4 text-xcolor" />
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Days Remaining:</span>
-                        <span className="text-lg font-bold text-[#ffd404]">
+                        <span className="text-lg font-bold text-xcolor">
                           {daysRemaining > 0 ? `${daysRemaining}` : '0'}
                         </span>
                       </div>

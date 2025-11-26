@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
+import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -58,18 +59,54 @@ export function SimpleModal() {
     title: "",
     description: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    setError(null) // Clear error when user types
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Note data:", formData)
-    // Here you can add logic to save the note
-    closeModal()
-    setFormData({ title: "", description: "" })
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const token = sessionStorage.getItem('Authorization')
+      
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.description,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || errorData.message || `Failed to save note: ${response.status} ${response.statusText}`)
+      }
+
+      // Success - show toast, close modal and reset form
+      toast.success("Note saved successfully")
+      closeModal()
+      setFormData({ title: "", description: "" })
+    } catch (err) {
+      console.error('Error saving note:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save note')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -89,6 +126,8 @@ export function SimpleModal() {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Enter title"
+                disabled={isLoading}
+                required
               />
             </div>
             <div className="grid gap-2">
@@ -100,14 +139,23 @@ export function SimpleModal() {
                 onChange={handleChange}
                 placeholder="Enter description"
                 rows={4}
+                disabled={isLoading}
+                required
               />
             </div>
+            {error && (
+              <div className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                {error}
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeModal}>
+            <Button type="button" variant="outline" onClick={closeModal} disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit">Save Note</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Note"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

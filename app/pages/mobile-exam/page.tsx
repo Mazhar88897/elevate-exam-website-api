@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { AlertTriangle, SkipForward, ChevronDown, ChevronRight, CheckCircle2, ArrowRightToLineIcon, ArrowLeftToLineIcon, Paperclip, Sparkles, FileCheck2, Flag, FlagOffIcon, XIcon, Loader2  } from "lucide-react"
+import { AlertTriangle, SkipForward, ChevronDown, ChevronRight, CheckCircle2, ArrowRightToLineIcon, ArrowLeftToLineIcon, Paperclip, Send, Sparkles, FileCheck2, Flag, FlagOffIcon, XIcon, Loader2, BookOpen, HelpCircle, StickyNote  } from "lucide-react"
 import Access from "@/components/dashboardItems/access"
 import Link from "next/link"
 import { useSupportModal, SupportModalProvider } from "@/components/dashboardItems/support-modal"
@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { AIChatInterface } from "@/components/dashboardItems/ai-chat"
 
 
 // Utility function for class names
@@ -140,8 +139,8 @@ interface ApiProgressResponse {
   chapters: ApiProgressChapter[];
 }
 
-// Topics Component
-function Topics({
+// Mobile Courses Component
+function MobileCoursesView({
   course,
   currentChapterIndex,
   currentSubChapterIndex,
@@ -150,75 +149,109 @@ function Topics({
   expandedChapters,
   onToggleChapter,
   onNavigateToQuestion,
-  progress
-}: TopicsProps) {
+  progress,
+  apiQuestions,
+  apiSubtopicProgress
+}: TopicsProps & { apiQuestions: ApiQuestionsResponse | null, apiSubtopicProgress: Record<string, number> }) {
   // Calculate subchapter progress
   const getSubChapterProgress = (chapterIdx: number, subChapterIdx: number) => {
     const subChapter = course.chapters[chapterIdx].subChapters[subChapterIdx]
+    
+    // Try to get from API progress first using IDs
+    if (apiQuestions && apiSubtopicProgress) {
+      const questionChapter = apiQuestions.chapters[chapterIdx]
+      const questionSubtopic = questionChapter?.subtopics[subChapterIdx]
+      
+      if (questionChapter && questionSubtopic) {
+        const key = `${questionChapter.id}_${questionSubtopic.id}`
+        const attemptedQuestions = apiSubtopicProgress[key]
+        
+        if (typeof attemptedQuestions === 'number') {
+          return `${attemptedQuestions}/${subChapter.questions.length}`
+        }
+      }
+    }
+    
+    // Fallback to local state
     const completed = completedQuestions[chapterIdx]?.[subChapterIdx]?.filter(Boolean).length || 0
     return `${completed}/${subChapter.questions.length}`
   }
 
   // Check if a subchapter is complete
   const isSubChapterComplete = (chapterIdx: number, subChapterIdx: number) => {
-    return completedQuestions[chapterIdx][subChapterIdx].every(Boolean)
+    return completedQuestions[chapterIdx]?.[subChapterIdx]?.every(Boolean) || false
   }
 
   return (
-    <div className="w-64 h-full border-r p-4 hidden md:block overflow-hidden flex flex-col">
-      <div className="mb-6 flex-shrink-0">       
-        <h2 className="font-bold mt-5 text-md mb-2">{course.courseName}</h2>
-        <Progress value={progress} className="h-1.5 bg-gray-200" />
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b">
+        <h2 className="font-bold text-lg mb-2">{course.courseName}</h2>
+        <Progress value={progress} className="h-2 bg-gray-200" />
       </div>
 
-      {/* Chapter list */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
-        <div className="space-y-2">
+      {/* Chapter list - scrollable */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-3">
           {course.chapters.map((chapter, chapterIdx) => (
-            <div key={chapterIdx} className="space-y-1">
+            <div key={chapterIdx} className="space-y-2">
               {/* Chapter header */}
               <button
-                className="flex items-center justify-between w-full py-2 text-left rounded-md transition-colors"
+                className="flex items-center justify-between w-full py-3 px-3 text-left rounded-lg border transition-colors bg-gray-50 dark:bg-gray-800"
                 onClick={() => onToggleChapter(chapterIdx)}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
                   {expandedChapters[chapterIdx] ? (
-                    <ChevronDown className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                    <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                    <ChevronRight className="h-5 w-5 text-gray-500 flex-shrink-0" />
                   )}
-                  <span className="text-sm font-semibold">{chapter.name}</span>
+                  <span className="text-sm font-semibold flex-1">{chapter.name}</span>
                 </div>
-               
+                <div
+                  className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2",
+                    chapterProgress[chapterIdx] === 100 ? "bg-green-500 text-white" : "border-2 border-gray-300",
+                  )}
+                >
+                  {chapterProgress[chapterIdx] === 100 && <CheckCircle2 className="h-4 w-4" />}
+                </div>
               </button>
 
               {/* Chapter progress bar */}
-              <div className="mx-2">
-                <Progress value={chapterProgress[chapterIdx]} className="h-1 bg-gray-200" />
+              <div className="px-3">
+                <Progress value={chapterProgress[chapterIdx]} className="h-1.5 bg-gray-200" />
               </div>
 
               {/* Subchapters */}
               {expandedChapters[chapterIdx] && (
-                <div className="ml-4 mt-1 space-y-1">
+                <div className="ml-4 mt-2 space-y-2">
                   {chapter.subChapters.map((subChapter, subChapterIdx) => (
                     <div
                       key={subChapterIdx}
                       className={cn(
-                        "pl-2 border-gray-200 py-1.5 rounded-md px-2 cursor-pointer",
+                        "py-2.5 px-3 rounded-lg cursor-pointer border transition-colors",
                         currentChapterIndex === chapterIdx && currentSubChapterIndex === subChapterIdx
-                          ? "font-black text-white text-sm"
-                          : "",
+                          ? "bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700"
+                          : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
                       )}
                       onClick={() => onNavigateToQuestion(chapterIdx, subChapterIdx, 0)}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{subChapter.name}</span>
+                        <span className={cn(
+                          "text-sm font-medium flex-1",
+                          currentChapterIndex === chapterIdx && currentSubChapterIndex === subChapterIdx
+                            ? "text-green-700 dark:text-green-300"
+                            : "text-gray-700 dark:text-gray-300"
+                        )}>
+                          {subChapter.name}
+                        </span>
                         <span
                           className={cn(
-                            "text-xs",
+                            "text-xs font-semibold ml-2",
                             isSubChapterComplete(chapterIdx, subChapterIdx)
-                              ? "text-green-500 font-semibold"
-                              : "text-gray-500",
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-gray-500 dark:text-gray-400",
                           )}
                         >
                           {getSubChapterProgress(chapterIdx, subChapterIdx)}
@@ -237,10 +270,6 @@ function Topics({
 }
 
 function QuizPage() {
-
-  // State for question submission
-  const [isQuestionSubmitting, setIsQuestionSubmitting] = useState(false);
-  
   // Course data
   const router = useRouter()
   const { openSupportModal } = useSupportModal()
@@ -278,25 +307,21 @@ function QuizPage() {
   // Track if progress has been initialized from API
   const [progressInitializedFromAPI, setProgressInitializedFromAPI] = useState(false)
   const [shouldUpdateProgress, setShouldUpdateProgress] = useState(false)
-  const [progressDataReady, setProgressDataReady] = useState(false)
   
   // Additional state for right panel
   const { openModal } = useModal()
-  const [tab, setTab] = useState("ai")
-  const [isOpen, setIsOpen] = useState(true)
+  // Mobile tab navigation state
+  const [activeTab, setActiveTab] = useState<"courses" | "quiz" | "ai" | "note">("quiz")
   
-  // Ref to track if fetch has been initiated (prevents duplicate fetches in Strict Mode)
-  const hasFetchedRef = useRef(false)
-  
-  // Prevent body scrolling
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [])
-  
-
+  // Debug: Log state values
+  console.log('=== CURRENT STATE ===')
+  console.log('progress:', progress)
+  console.log('chapterProgress:', chapterProgress)
+  console.log('apiSubtopicProgress:', apiSubtopicProgress)
+  console.log('completedQuestions count:', completedQuestions.flat(2).filter(Boolean).length)
+  console.log('progressInitializedFromAPI:', progressInitializedFromAPI)
+  console.log('shouldUpdateProgress:', shouldUpdateProgress)
+  console.log('========================')
 
   // Fetch questions from API
   const fetchQuestions = async (): Promise<ApiQuestionsResponse | null> => {
@@ -356,32 +381,23 @@ function QuizPage() {
     }
   }
 
-  // Process progress data (can be called with pre-fetched data or fetch it)
-  const processProgress = async (questionsData: ApiQuestionsResponse | null = null, progressData: ApiProgressResponse | null = null) => {
+  // Fetch progress from API
+  const fetchProgress = async (questionsData: ApiQuestionsResponse | null = null) => {
     try {
-      let data: ApiProgressResponse
-      
-      if (progressData) {
-        // Use provided progress data
-        data = progressData
-        setApiProgress(data)
-      } else {
-        // Fetch progress from API if not provided
-        // console.log('=== FETCHING PROGRESS ===')
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/progress/`, {
-          headers: {
-            'Authorization': `${sessionStorage.getItem('Authorization')}`
-          }
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch progress')
+      console.log('=== FETCHING PROGRESS ===')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/progress/`, {
+        headers: {
+          'Authorization': `${sessionStorage.getItem('Authorization')}`
         }
-        
-        data = await response.json()
-        // console.log('Progress API response:', data)
-        setApiProgress(data)
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch progress')
       }
+      
+      const data: ApiProgressResponse = await response.json()
+      console.log('Progress API response:', data)
+      setApiProgress(data)
       
       // Build a map of question IDs to their progress
       const progressMap: Record<number, { selectedOption: number | null, isFlagged: boolean }> = {}
@@ -393,23 +409,23 @@ function QuizPage() {
       const questionsToUse = questionsData || apiQuestions
       
       // First, find matching chapters in questions API by chapter ID
-      // console.log('questionsToUse available:', !!questionsToUse)
+      console.log('questionsToUse available:', !!questionsToUse)
       if (questionsToUse) {
-        // console.log('questionsToUse.chapters:', questionsToUse.chapters.length)
+        console.log('questionsToUse.chapters:', questionsToUse.chapters.length)
         questionsToUse.chapters.forEach(questionChapter => {
-          // console.log(`Looking for chapter ID ${questionChapter.id} in progress data...`)
+          console.log(`Looking for chapter ID ${questionChapter.id} in progress data...`)
           const matchingProgressChapter = data.chapters.find(pc => pc.chapter === questionChapter.id)
-          // console.log(`Matching chapter found:`, matchingProgressChapter)
+          console.log(`Matching chapter found:`, matchingProgressChapter)
           if (matchingProgressChapter) {
             questionChapter.subtopics.forEach(questionSubtopic => {
-              // console.log(`Looking for subtopic ID ${questionSubtopic.id} in chapter...`)
+              console.log(`Looking for subtopic ID ${questionSubtopic.id} in chapter...`)
               const matchingProgressSubtopic = matchingProgressChapter.subtopics.find(ps => ps.subtopic === questionSubtopic.id)
-              // console.log(`Matching subtopic found:`, matchingProgressSubtopic)
+              console.log(`Matching subtopic found:`, matchingProgressSubtopic)
               if (matchingProgressSubtopic) {
                 // Store using question API IDs
                 const key = `${questionChapter.id}_${questionSubtopic.id}`
                 subtopicProgressMap[key] = matchingProgressSubtopic.attempted_questions
-                // console.log(`Stored subtopic progress: ${key} = ${matchingProgressSubtopic.attempted_questions}`)
+                console.log(`Stored subtopic progress: ${key} = ${matchingProgressSubtopic.attempted_questions}`)
               }
             })
           }
@@ -428,7 +444,7 @@ function QuizPage() {
         })
       })
       
-      // console.log('Subtopic progress map:', subtopicProgressMap)
+      console.log('Subtopic progress map:', subtopicProgressMap)
       setApiSubtopicProgress(subtopicProgressMap)
       
       // Update completed and flagged questions based on progress
@@ -471,7 +487,7 @@ function QuizPage() {
           const totalQuestions = questionsToUse.total_questions
           const attemptedQuestions = data.attempted_questions
           const progressValue = totalQuestions > 0 ? (attemptedQuestions / totalQuestions) * 100 : 0
-          // console.log('Setting progress from API:', { attemptedQuestions, totalQuestions, progressValue })
+          console.log('Setting progress from API:', { attemptedQuestions, totalQuestions, progressValue })
           setProgress(progressValue)
           
           // Set chapter progress from API - match by chapter ID, not index
@@ -494,7 +510,7 @@ function QuizPage() {
             })
             return chapterProgressValue
           })
-          // console.log('All chapter progress:', newChapterProgress)
+          console.log('All chapter progress:', newChapterProgress)
           setChapterProgress(newChapterProgress)
           setProgressInitializedFromAPI(true) // Mark as initialized from API
           
@@ -575,163 +591,24 @@ function QuizPage() {
         }
       }
       
-      // Fallback: ensure progressInitializedFromAPI is set even if questionsToUse was null
-      // This handles edge cases where progress data exists but questions weren't loaded yet
-      if (!progressInitializedFromAPI && questionsToUse) {
-        setProgressInitializedFromAPI(true)
-      }
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch progress')
-      // Even on error, mark as initialized to prevent infinite loading
-      // The UI will show with default/empty progress
-      setProgressInitializedFromAPI(true)
     }
-  }
-
-  // Fetch progress from API (wrapper for backward compatibility)
-  const fetchProgress = async (questionsData: ApiQuestionsResponse | null = null) => {
-    return processProgress(questionsData, null)
   }
 
   // Load data on mount
   useEffect(() => {
-    // Prevent duplicate fetches (especially in React Strict Mode)
-    if (hasFetchedRef.current) {
-      return
-    }
-    
-    hasFetchedRef.current = true
-    
     const loadData = async () => {
       setLoading(true)
-      setProgressDataReady(false)
-      
-      const courseId = sessionStorage.getItem('course_id')
-      const token = sessionStorage.getItem('Authorization')
-      
-      if (!courseId || !token) {
-        setError('Missing course ID or authorization token')
-        setLoading(false)
-        // Reset ref on error so it can retry if needed
-        hasFetchedRef.current = false
-        return
+      const questionsData = await fetchQuestions()
+      if (questionsData) {
+        await fetchProgress(questionsData)
       }
-      
-      // Fetch both questions and progress in parallel
-      try {
-        const [questionsResponse, progressResponse] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/question_page/`, {
-            headers: {
-              'Authorization': token
-            }
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/progress/`, {
-            headers: {
-              'Authorization': token
-            }
-          })
-        ])
-        
-        if (!questionsResponse.ok) {
-          throw new Error('Failed to fetch questions')
-        }
-        
-        if (!progressResponse.ok) {
-          throw new Error('Failed to fetch progress')
-        }
-        
-        // Parse both responses
-        const questionsData: ApiQuestionsResponse = await questionsResponse.json()
-        const progressData: ApiProgressResponse = await progressResponse.json()
-        
-        // Set questions data (this also transforms and initializes state)
-        setApiQuestions(questionsData)
-        
-        // Transform API data to local format
-        const transformedCourse: Course = {
-          courseName: questionsData.name,
-          chapters: questionsData.chapters.map(chapter => ({
-            name: chapter.name,
-            subChapters: chapter.subtopics.map(subtopic => ({
-              name: subtopic.name,
-              questions: subtopic.questions.map(q => ({
-                question: q.text,
-                options: [q.option0, q.option1, q.option2, q.option3],
-                correctOption: [q.option0, q.option1, q.option2, q.option3][q.correct_option],
-                explanation: q.explanation
-              }))
-            }))
-          }))
-        }
-        
-        setCourse(transformedCourse)
-        
-        // Initialize state arrays based on new course structure
-        setExpandedChapters(Array(transformedCourse.chapters.length).fill(false))
-        setCompletedQuestions(
-          transformedCourse.chapters.map((chapter) =>
-            chapter.subChapters.map((subChapter) => Array(subChapter.questions.length).fill(false)),
-          ),
-        )
-        setFlaggedQuestions(
-          transformedCourse.chapters.map((chapter) =>
-            chapter.subChapters.map((subChapter) => Array(subChapter.questions.length).fill(false)),
-          ),
-        )
-        setChapterProgress(transformedCourse.chapters.map(() => 0))
-        
-        // Now process progress with questions data (using already fetched progressData)
-        await processProgress(questionsData, progressData)
-        
-      } catch (err) {
-        console.error('Error loading data:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load data')
-        setProgressInitializedFromAPI(true)
-        // Reset ref on error so it can retry if needed
-        hasFetchedRef.current = false
-      } finally {
-        setLoading(false)
-      }
+      setLoading(false)
     }
     
     loadData()
   }, [])
-
-  // Check if all progress data is ready before showing the quiz
-  useEffect(() => {
-    if (!loading && course.chapters.length > 0 && progressInitializedFromAPI) {
-      // Verify that all state arrays are properly initialized
-      const hasValidState = 
-        completedQuestions.length === course.chapters.length &&
-        flaggedQuestions.length === course.chapters.length &&
-        chapterProgress.length === course.chapters.length &&
-        expandedChapters.length === course.chapters.length
-      
-      if (hasValidState) {
-        // Small delay to ensure all state updates are applied
-        const timer = setTimeout(() => {
-          setProgressDataReady(true)
-        }, 50)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [loading, course.chapters.length, progressInitializedFromAPI, completedQuestions.length, flaggedQuestions.length, chapterProgress.length, expandedChapters.length])
-
-  // Restore selected option when current question changes (after progress is loaded)
-  useEffect(() => {
-    if (!progressDataReady || !apiQuestions || course.chapters.length === 0) return
-    
-    const questionId = getCurrentQuestionId()
-    if (questionId && selectedOptionsMap[questionId] !== undefined) {
-      const optionIndex = selectedOptionsMap[questionId]
-      const currentQuestion = course.chapters[currentChapterIndex]?.subChapters[currentSubChapterIndex]?.questions[currentQuestionIndex]
-      if (currentQuestion && optionIndex !== null && optionIndex >= 0 && optionIndex < currentQuestion.options.length) {
-        setSelectedOption(currentQuestion.options[optionIndex])
-        setIsAnswered(true)
-      }
-    }
-  }, [currentChapterIndex, currentSubChapterIndex, currentQuestionIndex, progressDataReady, selectedOptionsMap, apiQuestions, course])
 
   // Update progress locally when completedQuestions changes (only after API and when user answers)
   // DISABLED: We want to keep showing API progress, not recalculate from completedQuestions
@@ -789,23 +666,21 @@ function QuizPage() {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      // const data = await response.json();
-    
+      const data = await response.json();
+      console.log("✅ Success:", data);
     } catch (error) {
       console.error("❌ Error:", error);
     }
   };
 
-  // Current question data - show loading until both questions and progress are ready
-  if (course.chapters.length === 0 || !progressDataReady || loading) {
-    if (loading || !progressDataReady) {
+  // Current question data
+  if (course.chapters.length === 0) {
+    if (loading) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">
-              {course.chapters.length === 0 ? 'Loading questions...' : 'Loading progress...'}
-            </p>
+            <p className="text-gray-600 dark:text-gray-300">Loading questions...</p>
           </div>
         </div>
       )
@@ -848,66 +723,15 @@ function QuizPage() {
     setExpandedChapters(newExpandedChapters)
   }
 
-  // Helper function to find next valid question position (skips empty subchapters)
-  const findNextValidQuestion = (startChapterIdx: number, startSubChapterIdx: number, startQuestionIdx: number) => {
-    for (let c = startChapterIdx; c < course.chapters.length; c++) {
-      const chapter = course.chapters[c]
-      const startSub = (c === startChapterIdx) ? startSubChapterIdx : 0
-      
-      for (let s = startSub; s < chapter.subChapters.length; s++) {
-        const subChapter = chapter.subChapters[s]
-        if (subChapter.questions.length === 0) continue // Skip empty subchapters
-        
-        const startQ = (c === startChapterIdx && s === startSubChapterIdx) ? startQuestionIdx : 0
-        for (let q = startQ; q < subChapter.questions.length; q++) {
-          return { chapterIdx: c, subChapterIdx: s, questionIdx: q }
-        }
-      }
-    }
-    return null
-  }
-
-  // Navigate to specific question (with validation)
+  // Navigate to specific question
   const navigateToQuestion = (chapterIdx: number, subChapterIdx: number, questionIdx: number) => {
-    const chapter = course.chapters[chapterIdx]
-    if (!chapter) return
-    
-    const subChapter = chapter.subChapters[subChapterIdx]
-    if (!subChapter || subChapter.questions.length === 0) {
-      // If subchapter is empty, find next valid question
-      const nextValid = findNextValidQuestion(chapterIdx, subChapterIdx + 1, 0)
-      if (nextValid) {
-        setCurrentChapterIndex(nextValid.chapterIdx)
-        setCurrentSubChapterIndex(nextValid.subChapterIdx)
-        setCurrentQuestionIndex(nextValid.questionIdx)
-      }
-      return
-    }
-    
-    if (questionIdx >= subChapter.questions.length) {
-      questionIdx = 0
-    }
-    
     setCurrentChapterIndex(chapterIdx)
     setCurrentSubChapterIndex(subChapterIdx)
     setCurrentQuestionIndex(questionIdx)
-    
-    // Restore selected option from API if question was already answered
-    const questionId = apiQuestions?.chapters[chapterIdx]?.subtopics[subChapterIdx]?.questions[questionIdx]?.id
-    if (questionId && selectedOptionsMap[questionId] !== undefined) {
-      const optionIndex = selectedOptionsMap[questionId]
-      const question = subChapter.questions[questionIdx]
-      if (optionIndex !== null && optionIndex >= 0 && optionIndex < question.options.length) {
-        setSelectedOption(question.options[optionIndex])
-        setIsAnswered(true)
-      } else {
-        setSelectedOption(null)
-        setIsAnswered(false)
-      }
-    } else {
-      setSelectedOption(null)
-      setIsAnswered(false)
-    }
+    setSelectedOption(null)
+    setIsAnswered(false)
+    // Switch to quiz tab when navigating from courses
+    setActiveTab("quiz")
   }
 
   // Get question ID from API structure
@@ -971,16 +795,13 @@ function QuizPage() {
   }
 
   // Handle continue button
-  // const [isQuestionSubmitting, setIsQuestionSubmitting] = useState(false);
   const handleContinue = async () => {
     // Submit to API before moving to next question
-    setIsQuestionSubmitting(true)   
     const questionId = getCurrentQuestionId()
     if (questionId) {
       const optionIndex = selectedOption ? currentQuestion.options.indexOf(selectedOption) : null
       await submitHandler(questionId, optionIndex, isQuestionFlagged())
     }
-    setIsQuestionSubmitting(false)
     
     setSelectedOption(null)
     setIsAnswered(false)
@@ -999,7 +820,6 @@ function QuizPage() {
       setCurrentSubChapterIndex(0)
       setCurrentQuestionIndex(0)
     }
-   
   }
 
   // Handle skip button
@@ -1184,76 +1004,115 @@ function QuizPage() {
 
 
   return (
-    <div className="flex h-screen pt-3 overflow-hidden">
-      {/* Sidebar */}
-      <Topics
-        course={course}
-        currentChapterIndex={currentChapterIndex}
-        currentSubChapterIndex={currentSubChapterIndex}
-        chapterProgress={chapterProgress}
-        completedQuestions={completedQuestions}
-        expandedChapters={expandedChapters}
-        onToggleChapter={toggleChapter}
-        onNavigateToQuestion={navigateToQuestion}
-        progress={progress}
-      />
-
-      {/* Main content */}        
-      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-        {/* Premium banner */}
-        <div className="max-w-5xl mx-auto w-full mt-6 flex-shrink-0">
-       {/* <Access /> */}
-       </div>
-        {/* Progress bar */}
-        <div className="max-w-3xl mx-auto w-full px-4 mt-4 rounded-mid flex-shrink-0">
-          <Progress value={progress} className="h-1.5 bg-gray-200 dark:bg-gray-800 rounded-mid" />
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+      {/* Top tab navigation */}
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 safe-area-top">
+        <div className="flex items-center justify-around h-16">
+          <button
+            onClick={() => setActiveTab("courses")}
+            className={cn(
+              "flex flex-col items-center justify-center flex-1 h-full transition-colors",
+              activeTab === "courses" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+            )}
+          >
+            <BookOpen className={cn("h-5 w-5 mb-1", activeTab === "courses" && "text-green-600 dark:text-green-400")} />
+            <span className="text-xs font-semibold">Courses</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("quiz")}
+            className={cn(
+              "flex flex-col items-center justify-center flex-1 h-full transition-colors",
+              activeTab === "quiz" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+            )}
+          >
+            <HelpCircle className={cn("h-5 w-5 mb-1", activeTab === "quiz" && "text-green-600 dark:text-green-400")} />
+            <span className="text-xs font-semibold">Quiz</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("ai")}
+            className={cn(
+              "flex flex-col items-center justify-center flex-1 h-full transition-colors",
+              activeTab === "ai" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+            )}
+          >
+            <Sparkles className={cn("h-5 w-5 mb-1", activeTab === "ai" && "text-green-600 dark:text-green-400")} />
+            <span className="text-xs font-semibold">AI</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("note")}
+            className={cn(
+              "flex flex-col items-center justify-center flex-1 h-full transition-colors",
+              activeTab === "note" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+            )}
+          >
+            <StickyNote className={cn("h-5 w-5 mb-1", activeTab === "note" && "text-green-600 dark:text-green-400")} />
+            <span className="text-xs font-semibold">Note</span>
+          </button>
         </div>
+      </div>
 
-        {/* Question content */}
-        <div className="flex-1 p-6 max-w-3xl mx-auto w-full overflow-y-auto min-h-0">
-          <div className="flex   justify-between items-center mb-4">
-            <div className="text-sm font-black text-gray-600 dark:text-gray-300">
-              Question <span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
+      {/* Main content area */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Tab content */}
+        {activeTab === "courses" && (
+          <MobileCoursesView
+            course={course}
+            currentChapterIndex={currentChapterIndex}
+            currentSubChapterIndex={currentSubChapterIndex}
+            chapterProgress={chapterProgress}
+            completedQuestions={completedQuestions}
+            expandedChapters={expandedChapters}
+            onToggleChapter={toggleChapter}
+            onNavigateToQuestion={navigateToQuestion}
+            progress={progress}
+            apiQuestions={apiQuestions}
+            apiSubtopicProgress={apiSubtopicProgress}
+          />
+        )}
+
+        {activeTab === "quiz" && (
+          <div className="flex-1 overflow-y-auto flex flex-col">
+            {/* Progress bar */}
+            <div className="w-full px-4 pt-4 pb-2">
+              <Progress value={progress} className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full" />
             </div>
-            <div className="flex space-x-3">
-              <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSkip}>
-              <SkipForward className="h-3 mr-1 w-3 " strokeWidth={3} />
-                <span className="text-sm font-bold">Skip</span>
+
+            {/* Question content */}
+            <div className="flex-1 p-4 pb-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-sm font-black text-gray-600 dark:text-gray-300">
+                  Q<span className="text-green-600">{getQuestionNumber()}</span> of <span className="text-green-600">{totalQuestions}</span> 
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSkip}>
+                    <SkipForward className="h-4 mr-1 w-4" strokeWidth={3} />
+                    <span className="text-xs font-bold">Skip</span>
+                  </button>
+                  <button
+                    className={cn(
+                      "text-gray-600 dark:text-gray-300 flex items-center cursor-pointer",
+                    )}
+                    onClick={handleFlag}
+                  >
+                    {isQuestionFlagged() ? (
+                      <div className="flex items-center">
+                        <Flag className="h-4 mr-1 w-4 text-xcolor" strokeWidth={3} />
+                        <span className="text-xs font-bold text-xcolor">Flagged</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <FlagOffIcon className="h-4 mr-1 w-4" strokeWidth={3} />
+                        <span className="text-xs font-bold">Flag</span>
+                      </div>
+                    )}
+                  </button>
+                  <button className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSubmitQuiz}> <ArrowRightToLineIcon className="h-4 mr-1 w-4" strokeWidth={3} /> <span className="text-xs font-bold">Submit</span>  </button>
+                  <button className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleQuitQuiz}> <XIcon className="h-4 mr-1 w-4" strokeWidth={3} /> <span className="text-xs font-bold">Quit</span>  </button>
+                </div>
               </div>
-              <div
-                
-                className={cn(
-                  "text-gray-600 dark:text-gray-300 mx-3 flex items-center cursor-pointer",
-                  isQuestionFlagged() && "",
-                )}
-                onClick={handleFlag}
-              >
-               {isQuestionFlagged() ? (
-                  <div className="flex items-center">
-                    <Flag className="h-3 mr-1 w-3 text-xcolor" strokeWidth={3} />
-                    <span className="text-sm font-bold text-xcolor">Flagged</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <FlagOffIcon className="h-3 mr-1 w-3" strokeWidth={3} />
-                        <span className="text-sm font-bold">Flag  </span>
-                  </div>
-                )}
-               </div>
-           
-               <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleQuitQuiz}>
-               <XIcon className="h-3 w-3" strokeWidth={3} />
-                <span className="text-sm font-bold">Quit</span>
-               
-              </div>
-              <div className="text-gray-600 dark:text-gray-300 flex items-center cursor-pointer" onClick={handleSubmitQuiz}>
-                <span className="text-sm font-bold">  Submit </span>
-                <ChevronRight className="h-3 w-3" strokeWidth={3} />
-              </div>
-              
-           
-            </div>
-          </div>
 
           {/* Question */}
           <div className="mb-6">
@@ -1298,18 +1157,9 @@ function QuizPage() {
 
           {/* Continue button */}
           {isAnswered && (
-            <>
-              {isQuestionSubmitting ?
-            <div className="w-32 text-sm flex items-center justify-center text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid" >
-              <Loader2 className="w-4 h-4 animate-spin" />
-            </div> :
-            <>
-            <div className="w-32 text-sm flex items-center justify-center text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid" onClick={handleContinue}>
-              <span>Continue</span>
+            <div className="w-32 text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid" onClick={handleContinue}>
+              Continue
             </div>
-            </>
-            }
-            </>
           )}
           
 
@@ -1322,64 +1172,171 @@ function QuizPage() {
               <AlertTriangle className="h-3 w-3" />
             </button>
           </div>
-         </div>
-
-       
-      </div>
-
-      <div className="overflow-hidden flex-shrink-0">
-        {/* Chapter list */}
-        <div className="flex h-full flex-col mt-6">
-        {isOpen ? (
-  <div className="w-[350px] border-l max-w-full flex flex-col h-full ml-auto overflow-hidden">
-    {/* Header with custom div tabs */}
-    <div className="flex flex-row items-center justify-between pt-6 p-4 pb-2 flex-shrink-0">
-      <div className="flex items-center gap-2 w-full">
-        <div className="flex gap-3">
-          <div
-            onClick={() => setTab("ai")}
-            className={`flex items-center cursor-pointer px-0 font-bold text-sm mr-2 transition-colors ${tab === "ai" ? "text-xcolor" : "text-gray-700"}`}
-            style={{ userSelect: 'none' }}
-          >
-            <Sparkles className={`mr-1 w-4 h-4 ${tab === "ai" ? "text-xcolor" : "text-gray-400"}`} strokeWidth={3} />
-            AI Assistant
+            </div>
           </div>
-          <div
-            onClick={() => setTab("notes")}
-            className={`flex items-center cursor-pointer px-0 font-bold text-sm transition-colors ${tab === "notes" ? "text-xcolor" : "text-gray-700"}`}
-            style={{ userSelect: 'none' }}
-          >
-            <FileCheck2 className={`mr-1 w-4 h-4 ${tab === "notes" ? "text-xcolor" : "text-gray-400"}`} strokeWidth={3} />
-            Add Notes
-          </div>
-        </div>
-      </div>
-      <ArrowRightToLineIcon onClick={() => setIsOpen(false)} className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-    </div>
-    <div className="flex-1  flex flex-col overflow-y-auto min-h-0">
-      {tab === "ai" && (
-       <AIChatInterface />
-      )}
-      {tab === "notes" && (
-        <Notes />
-      )}
-    </div>
-   
-  </div>
-) : (
-  <div className="w-5 p-4 pr-10 border-white flex flex-col h-full ml-auto">
-   <ArrowLeftToLineIcon onClick={() => setIsOpen(true)} className="w-5 h-5 text-gray-800  cursor-pointer hover:text-black" />
+        )}
 
+        {activeTab === "ai" && (
+          <div className="flex-1 overflow-hidden">
+            <ChatInterface />
+          </div>
+        )}
+
+        {activeTab === "note" && (
+          <div className="flex-1 overflow-y-auto">
+            <Notes />
+          </div>
+        )}
       </div>
-)}
-       
-        </div>
-      </div>
-    </div>  
+    </div>
   )   
 }
   
 
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string | React.ReactNode
+  isThinking?: boolean
+}
+
+function ChatInterface() {
+  const initialMessages: Message[] = [
+    {
+      id: "1",
+      role: "user",
+      content: "How do I retrieve a push token on a device?",
+    },
+    {
+      id: "2",
+      role: "assistant",
+      content: (
+        <>
+          <p className="mb-2">
+            To retrieve a push token on a device using React Native, you typically follow these steps:
+          </p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>
+              <span className="font-bold">Install Required Packages:</span>{" "}
+              {"Ensure you have the Expo SDK or the necessary libraries for push notifications installed, like "}
+              <span className="underline">expo-notifications</span>.
+            </li>
+            <li>
+              <span className="font-bold">Request Permissions:</span>{" "}
+              {"Before retrieving the push token, request the user's permission"}
+            </li>
+          </ol>
+        </>
+      ),
+    },
+  ]
+
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [input, setInput] = useState("")
+  const messagesEndRef = React.useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (input.trim() === "") return
+
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+    }
+
+    setMessages((prevMessages) => [...prevMessages, newUserMessage])
+    setInput("")
+
+    // Add thinking message
+    const thinkingMessageId = (Date.now() + 1).toString()
+    const thinkingMessage: Message = {
+      id: thinkingMessageId,
+      role: "assistant",
+      content: "Thinking...",
+      isThinking: true,
+    }
+    setMessages((prevMessages) => [...prevMessages, thinkingMessage])
+
+    // Simulate AI response after a delay
+    await new Promise((resolve) => setTimeout(resolve, 2000)) // 2 second delay
+
+    const aiResponseContent = (
+      <>
+        <p className="mb-2">
+          To retrieve a push token on a device using React Native, you typically follow these steps:
+        </p>
+        <ol className="list-decimal list-inside space-y-1">
+          <li>
+            <span className="font-bold">Install Required Packages:</span>{" "}
+            {"Ensure you have the Expo SDK or the necessary libraries for push notifications installed, like "}
+            <span className="underline">expo-notifications</span>.
+          </li>
+          <li>
+            <span className="font-bold">Request Permissions:</span>{" "}
+            {"Before retrieving the push token, request the user's permission"}
+          </li>
+        </ol>
+      </>
+    )
+
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === thinkingMessageId ? { ...msg, content: aiResponseContent, isThinking: false } : msg,
+      ),
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full w-full max-w-md mx-auto    overflow-hidden">
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Date separator */}
+        <div className="relative flex items-center justify-center my-4">
+          <div className="flex-grow border-t border-gray-300" />
+          <span className="mx-4 text-sm text-gray-500">Sunday, Jul 13</span>
+          <div className="flex-grow border-t border-gray-300" />
+        </div>
+        {messages.map((message) => (
+          <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`${
+                message.role === "user" ? "bg-[#f0f0ff] dark:bg-xcolor" : "bg-gray-100 text-gray-800 dark:text-white  dark:bg-[#111111]"
+              } rounded-lg p-3 ${message.role === "user" ? "max-w-[75%]" : "max-w-[85%]"} ${message.isThinking ? "animate-pulse" : ""}`}
+            >
+              {message.content}
+            </div>
+          </div>
+        ))}
+        {/* <div ref={messagesEndRef} /> Scroll anchor */}
+      </div>
+
+      {/* Input area */}
+      <div className="p-4 border-t flex items-center gap-2">
+        <button className="p-2 text-gray-400 hover:text-gray-600">
+          <Paperclip className="w-5 h-5" />
+        </button>
+        <Input
+          className="flex-1 border rounded px-3 py-2 text-sm"
+          placeholder="Ask a question"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button onClick={handleSendMessage} className="bg-xcolor text-white px-3 py-2 rounded flex items-center justify-center">
+          <Send className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function Notes() {  
   const [title, setTitle] = useState("")

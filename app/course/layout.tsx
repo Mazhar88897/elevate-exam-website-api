@@ -151,7 +151,7 @@ export function Sidebar({ className }: SidebarProps) {
   // Icon-only sidebar items
 
   const iconItems = [
-    { icon: BookOpen, label: "Home", link: "/dashboard", color: "text-yellow-500" },
+    { icon: BookOpen, label: "Home", link: "/dashboard", color: "text-xcolor" },
     { icon: Megaphone, label: "Announcements", link: "/dashboard/announcements", color: "text-red-500",hasSeparator: true },
     { icon: Bell, label: "Notifications", color: "text-green-500" },
     { icon: HelpCircle, label: "Help Center", link: "/dashboard/help", color: "text-purple-500",hasSeparator: true },
@@ -225,11 +225,11 @@ export function Sidebar({ className }: SidebarProps) {
             <Link 
               href={link} 
               className={`text-sm transition-colors flex items-center gap-2 ${
-                isActive ? 'text-yellow-500' : 'hover:text-primary'
+                isActive ? 'text-xcolor' : 'hover:text-primary'
               }`}
             >
               {icon && React.createElement(icon, { 
-                className: `w-4 h-4 ${isActive ? 'text-yellow-500' : color || ''}`, 
+                className: `w-4 h-4 ${isActive ? 'text-xcolor' : color || ''}`, 
                 strokeWidth: 2.5 
               })}
               {name}
@@ -289,11 +289,11 @@ export function Sidebar({ className }: SidebarProps) {
             <Link 
               href={link} 
               className={`transition-colors flex items-center gap-2 ${
-                isActive || hasActiveSubItem ? 'text-yellow-500' : 'hover:text-primary'
+                isActive || hasActiveSubItem ? 'text-xcolor' : 'hover:text-primary'
               }`}
             >
               {icon && React.createElement(icon, { 
-                className: `w-4 h-4 ${isActive || hasActiveSubItem ? 'text-yellow-500' : color || ''}`, 
+                className: `w-4 h-4 ${isActive || hasActiveSubItem ? 'text-xcolor' : color || ''}`, 
                 strokeWidth: 2.5 
               })}
               {name}
@@ -326,7 +326,7 @@ export function Sidebar({ className }: SidebarProps) {
                   <Link 
                     href={subItem.link} 
                     className={`mt-3 transition-colors ml-2 ${
-                      isSubItemActive ? 'text-yellow-500' : 'hover:text-primary'
+                      isSubItemActive ? 'text-xcolor' : 'hover:text-primary'
                     }`}
                   >
                     {subItem.label}

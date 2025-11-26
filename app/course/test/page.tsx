@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Flag, AlertTriangle, SkipForward, ChevronRight, CheckCircle2, FlagOffIcon, XIcon } from "lucide-react"
+import { Flag, AlertTriangle, SkipForward, ChevronRight, CheckCircle2, FlagOffIcon, XIcon, Loader2 } from "lucide-react"
 import Access from "@/components/dashboardItems/access"
 import Link from "next/link"
 import { useSupportModal } from "@/components/dashboardItems/support-modal"
@@ -106,6 +106,7 @@ function QuizPage() {
   const [showQuitModal, setShowQuitModal] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showStartModal, setShowStartModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   
   // Fetch questions from API 1
@@ -344,35 +345,40 @@ function QuizPage() {
 
   // Handle continue button
   const handleContinue = async () => {
-    await submitHandler(questions[currentQuestionIndex].id, selectedOption, flaggedQuestions[currentQuestionIndex])
-    setSelectedOption(null)
-    setIsAnswered(false)
+    setIsSubmitting(true)
+    try {
+      await submitHandler(questions[currentQuestionIndex].id, selectedOption, flaggedQuestions[currentQuestionIndex])
+      setSelectedOption(null)
+      setIsAnswered(false)
 
-    // Move to next question  
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
-    } else {
-      setHundredPercentProgress(true)
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/submit/`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `${sessionStorage.getItem('Authorization')}`,
-              "Content-Type": "application/json",
-            },
+      // Move to next question  
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1)
+      } else {
+        setHundredPercentProgress(true)
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/submit/`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": `${sessionStorage.getItem('Authorization')}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+    
+          if (res.ok){
+            toast.success("Quiz submitted successfully")
+            router.push(`/course/test-analytics`)
           }
-        );
-  
-        if (res.ok){
-          toast.success("Quiz submitted successfully")
-          router.push(`/course/test-analytics`)
+        } catch (error) {
+          console.error("Error submitting quiz:", error)
+          toast.error("Failed to submit quiz")
         }
-      } catch (error) {
-        console.error("Error submitting quiz:", error)
-        toast.error("Failed to submit quiz")
       }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -666,8 +672,8 @@ function QuizPage() {
               >
                {flaggedQuestions[currentQuestionIndex] ? 
                <>
-                <Flag className="h-3 mr-1 w-3 text-yellow-500" strokeWidth={3} />
-                <span className="text-sm font-bold text-yellow-500">Flagged</span>
+                <Flag className="h-3 mr-1 w-3 text-xcolor" strokeWidth={3} />
+                <span className="text-sm font-bold text-xcolor">Flagged</span>
                </>
                :
                <>
@@ -731,9 +737,20 @@ function QuizPage() {
 
           {/* Continue button */}
           {isAnswered && (
-            <div className="w-44 text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid cursor-pointer" 
-            onClick={handleContinue}>
-              {currentQuestionIndex === questions.length - 1 ? "Continue and Submit" : "Continue"}
+            <div 
+              className={`w-44 text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid flex items-center justify-center gap-2 ${
+                isSubmitting ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+              }`}
+              onClick={!isSubmitting ? handleContinue : undefined}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {/* <span>Loading...</span> */}
+                </>
+              ) : (
+                currentQuestionIndex === questions.length - 1 ? "Continue and Submit" : "Continue"
+              )}
             </div>
           )}
 

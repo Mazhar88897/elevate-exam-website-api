@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ChevronDown, Globe, Clock, Award, BookOpen, User, Bookmark } from "lucide-react"
 import { CustomButton } from "@/components/pages/CustomButton"
 import { HoverCard } from "@/components/pages/hoverCardHard"
+import { PurchaseModal } from "@/components/pages/PurchaseModal"
 
 interface Announcement {
   id: number
@@ -45,6 +46,7 @@ export default function CourseLandingPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [progressValues, setProgressValues] = useState({
     handleAdvanced: 0,
     dimensionalityReduction: 0,
@@ -152,8 +154,10 @@ export default function CourseLandingPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-7xl">
-      <div className="flex  flex-col-reverse   lg:flex-row gap-8">
+    <>
+      <PurchaseModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-7xl">
+        <div className="flex  flex-col-reverse   lg:flex-row gap-8">
         {/* Left side - Course card */}
        
         <div className="w-full p-2 lg:w-[350px]  h-[70vh] overflow-auto">
@@ -201,7 +205,7 @@ export default function CourseLandingPage() {
                 
                 </div>
               </div>
-             <CustomButton ><p className="text-sm font-semibold">Try Now!</p></CustomButton>
+             <CustomButton onClick={() => setIsModalOpen(true)}><p className="text-sm font-semibold">Try Now!</p></CustomButton>
             </div>
           </CardContent>
           </HoverCard>
@@ -313,6 +317,7 @@ export default function CourseLandingPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

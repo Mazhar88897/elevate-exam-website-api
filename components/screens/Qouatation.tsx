@@ -35,7 +35,7 @@ export default function Qouatation() {
 
               <div className="flex mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-[#ffd404] fill-current" viewBox="0 0 24 24">
+                  <svg key={star} className="w-5 h-5 text-xcolor fill-current" viewBox="0 0 24 24">
                     <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
                   </svg>
                 ))}
@@ -59,11 +59,11 @@ export default function Qouatation() {
 
               <div className="flex mb-4">
                 {[1, 2, 3, 4].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-[#ffd404] fill-current" viewBox="0 0 24 24">
+                  <svg key={star} className="w-5 h-5 text-xcolor fill-current" viewBox="0 0 24 24">
                     <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
                   </svg>
                 ))}
-                <svg className="w-5 h-5 text-[#ffd404] fill-current" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-xcolor fill-current" viewBox="0 0 24 24">
                   <path d="M12 15.4V6.1L13.71 10.13L18.09 10.5L14.77 13.39L15.76 17.67L12 15.4M22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24Z" />
                 </svg>
               </div>

@@ -163,7 +163,7 @@ export default function AccountPage() {
         <Card className="w-full">
           <CardHeader>
                <CardTitle className="flex items-center gap-2">
-                <UserCircleIcon className="h-5 w-5 text-[#ffd404]" />
+                <UserCircleIcon className="h-5 w-5 text-xcolor" />
                 Personal Information
               </CardTitle>
             <CardDescription >Update your account details and profile information</CardDescription>

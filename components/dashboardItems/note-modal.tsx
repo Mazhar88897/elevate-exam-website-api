@@ -99,7 +99,7 @@ export default function NoteModal({ isOpen, onClose, onSave, note, isEditing }: 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-purple-500 hover:bg-purple-600">
+            <Button type="submit" className="bg-xcolor hover:bg-xcolor/90">
               {isEditing ? "Update" : "Create"}
             </Button>
           </div>

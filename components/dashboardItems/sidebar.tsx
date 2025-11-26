@@ -118,7 +118,13 @@ export default function Sidebar({ className }: SidebarProps) {
 
   const isActiveLink = (link?: string) => {
     if (!link) return false
-    return pathname === link || pathname.startsWith(link + '/')
+
+    const normalize = (value: string) => {
+      const trimmed = value.replace(/\/+$/, '')
+      return trimmed === '' ? '/' : trimmed
+    }
+
+    return normalize(pathname) === normalize(link)
   }
 
   const menuCategories: MenuCategory[] = [
@@ -207,10 +213,10 @@ export default function Sidebar({ className }: SidebarProps) {
                           href={item.link}
                           className={cn(
                             "flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
-                            isActive && "text-yellow-500"
+                            isActive && "text-xcolor"
                           )}
                         >
-                          {item.icon && <item.icon className={`w-4 h-4 mr-3 ${item.iconColor || ''} ${isActive ? 'text-yellow-500' : ''}`} />}
+                          {item.icon && <item.icon className={`w-4 h-4 mr-3 ${item.iconColor || ''} ${isActive ? 'text-xcolor' : ''}`} />}
                           {item.label}
                         </Link>
                       ) : (
@@ -234,9 +240,9 @@ export default function Sidebar({ className }: SidebarProps) {
         <div className="w-full flex justify-center  items-center mb-3  ">
       <div className="bg-gray-800 w-[180px] h-[150px] py-5 rounded-[10px]  text-center ">
             {/* Icon */}
-            <div className="flex justify-center items-center gap-2 text-xs font-bold sm:block hidden text-yellow-500 rounded-full mx-auto mb-4">
+            <div className="flex justify-center items-center gap-2 text-xs font-bold sm:block hidden text-xcolor rounded-full mx-auto mb-4">
              
-              <span>Access to all Domains</span>
+              <span>Access More Domains</span>
             </div>
           
            
@@ -248,8 +254,8 @@ export default function Sidebar({ className }: SidebarProps) {
             </h3>
             
             {/* Button */}
-            <Link href="/dashboard/upgrade" className="bg-yellow-500 hover:bg-yellow-700  text-xs text-white font-semibold px-6 py-2 rounded-full transition-colors duration-200">
-              Upgrade Now
+            <Link href="/dashboard/add-domain" className="bg-xcolor hover:bg-yellow-700  text-xs text-white font-semibold px-6 py-2 rounded-full transition-colors duration-200">
+              Buy Now
             </Link>
           </div>
          

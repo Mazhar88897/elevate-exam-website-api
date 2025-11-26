@@ -69,7 +69,7 @@ interface SocialIconProps {
 
 function SocialIcon({ href, icon, label }: SocialIconProps) {
   return (
-    <Link href={href} aria-label={label} className="text-[#ffd404] hover:text-white transition-colors">
+    <Link href={href} aria-label={label} className="text-xcolor hover:text-white transition-colors">
       {icon}
     </Link>
   )

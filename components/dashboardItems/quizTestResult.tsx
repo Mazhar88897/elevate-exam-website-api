@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckIcon, XIcon, ChevronDownIcon, ChevronUpIcon, Flag, Check, X, ChevronRight, ChevronUp, ChevronDown } from "lucide-react"
+import { CheckIcon, XIcon, ChevronDownIcon, ChevronUpIcon, Flag, Check, X, ChevronRight, ChevronUp, ChevronDown, FlagIcon } from "lucide-react"
 import Image from "next/image"
 
 // Semicircular Progress Bar Component
@@ -76,6 +76,8 @@ interface Question {
   status: QuestionStatus
   category: string
   explanation: string
+  correct_option?: string
+  isFlagged?: boolean
 }
 
 // API Response Interfaces
@@ -252,9 +254,7 @@ export default function QuizResultsPage() {
           }
         }
 
-        console.log('Questions API Response:', questionsData)
-        console.log('Progress API Response:', progressData)
-
+       
         setQuestionsData(questionsData)
         setProgressData(progressData)
 
@@ -310,14 +310,17 @@ export default function QuizResultsPage() {
               }
               // If no progressQuestion, status remains "skipped" (already set as default)
 
-              console.log(`Question ${questionNumber} (ID: ${apiQuestion.id}): status=${status}, selected=${progressQuestion?.selected_option}, flagged=${progressQuestion?.is_flagged}`)
+              // Get correct option text based on correct_option number
+              const correctOptionText = apiQuestion[`option${apiQuestion.correct_option}` as keyof APIQuestion] as string
 
               transformedQuestions.push({
                 id: questionNumber++,
                 text: apiQuestion.text,
                 status,
                 category: sessionStorage.getItem('course_name') || "",
-                explanation: apiQuestion.explanation
+                explanation: apiQuestion.explanation,
+                correct_option: correctOptionText,
+                isFlagged: progressQuestion?.is_flagged || false
               })
             })
           })
@@ -360,9 +363,9 @@ export default function QuizResultsPage() {
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-4">
               <div className="flex space-x-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce"></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
               <div className="text-lg text-gray-600">Loading quiz results...</div>
             </div>
@@ -380,7 +383,7 @@ export default function QuizResultsPage() {
           <div className="flex items-center justify-center h-64">
             <img src="/something-went-wrong.png" alt="Error" width={200} height={200} className="mx-auto mb-4" />
           </div>
-          <div className="text-lg text-red-600">Error: {error}</div>
+          {/* <div className="text-lg text-red-600">Error: {error}</div> */}
         </div>
       </div>
     )
@@ -398,7 +401,7 @@ export default function QuizResultsPage() {
             
 
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-             {sessionStorage.getItem('course_name')}
+             {sessionStorage.getItem('course_name')} Quiz.
             </h2>
             <div className="flex items-center gap-6 text-sm">
               <div className="flex font-bold items-center gap-2">
@@ -508,7 +511,7 @@ export default function QuizResultsPage() {
          </div> */}
 
         {/* Question Details */}
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-5xl mx-auto">
       {questions.map((question: any) => (
         <div
           key={question.id}
@@ -522,41 +525,63 @@ export default function QuizResultsPage() {
                 <Image src="/FAQ.svg" alt="FAQ" width="75" height="75" className="ml-[-30px]" />
                 <span className="text-sm flex font-semibold ml-[-30px]"><p className="hidden sm:block">Question No. </p>{question.id}</span>
 
-                {question.status === "correct" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-green-600 rounded-sm flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
+                <div className="flex items-center gap-2 ml-3">
+                  {/* Status badge (correct/incorrect/skipped) */}
+                  {question.status === "correct" && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-green-600 rounded-sm flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-sm hidden sm:block font-semibold text-green-700">Correct</span>
                     </div>
-                    <span className="text-sm hidden sm:block font-semibold text-green-700">Correct</span>
-                  </div>
-                )}
+                  )}
 
-                {question.status === "incorrect" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-red-600 rounded-sm flex items-center justify-center">
-                      <X className="w-4 h-4 text-white" />
+                  {question.status === "incorrect" && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-red-600 rounded-sm flex items-center justify-center">
+                        <X className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm hidden sm:block font-semibold text-red-600">Incorrect</span>
                     </div>
-                    <span className="text-sm hidden sm:block font-semibold text-red-600">Incorrect</span>
-                  </div>
-                )}
+                  )}
 
-                {question.status === "flagged" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-yellow-500 rounded-sm flex items-center justify-center">
-                      <Flag className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm font-semibold text-yellow-700">Flagged</span>
-                  </div>
-                )}
+                  {question.status === "skipped" && (
+                    progressData?.last_viewed_question && progressData.last_viewed_question >= question.id ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
+                      </div>
+                    )
+                  )}
 
-                {question.status === "skipped" && (
-                  <div className="flex items-center gap-1 ml-3">
-                    <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4 text-white" />
+                  {question.status === "flagged" && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-gray-400 rounded-sm flex items-center justify-center">
+                        <ChevronRight className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm hidden sm:block font-semibold text-gray-600">Skipped</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-600">Skipped</span>
-                  </div>
-                )}
+                  )}
+
+                  {/* Flagged indicator (shown alongside status if flagged) */}
+                  {question.isFlagged && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-yellow-500 rounded-sm flex items-center justify-center">
+                        <Flag className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-sm hidden sm:block font-semibold text-yellow-700">Flagged</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Right side: Category */}
@@ -586,10 +611,19 @@ export default function QuizResultsPage() {
          
           {/* Explanation Content */}
           {openExplanations[question.id] && (
+            <div>
+               
+            <div className="px-4 pb-4  border-gray-200 dark:bg-background">
+              
+              <p className="text-slate-800 dark:text-slate-100 text-xs font-bold">Correct Answer:</p>
+              <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">{question.correct_option || "N/A"}</p>
+            </div>
+            
             <div className="px-4 pb-4  border-gray-200 dark:bg-background">
               
               <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">Explaination:</p>
               <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">{question.explanation}</p>
+            </div>
             </div>
           )}
         </div>
@@ -665,7 +699,7 @@ function Component({
     { browser: "Correct", visitors: correctCount, fill: "#86efac" },   // bg-green-300
     { browser: "Wrong", visitors: incorrectCount, fill: "#fecaca" },     // bg-gray-300
     { browser: "Skipped", visitors: skippedCount, fill: "#d1d5db" },   // bg-red-200
-    { browser: "Flagged", visitors: flaggedCount, fill: "#f3f4f6" },   // bg-gray-100
+    { browser: "Flagged", visitors: flaggedCount, fill: "#ffffdd" },   // bg-gray-100
   ];
 
   return (
@@ -714,9 +748,9 @@ function Component({
           </div>
 
           <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-gray-700 rounded-sm flex items-center justify-center">
-                    <ChevronRight className="w-4 h-4 text-white" strokeWidth={2.5} />
-                    </div>
+          <div className="w-5 h-5 bg-yellow-500 rounded-sm flex items-center justify-center">
+                        <FlagIcon className="w-4 h-4 text-white" />
+                      </div>
             <span className="text-sm flex">flagged {flaggedCount} <span className="hidden sm:block ml-1">Questions</span>     </span>
           </div>
 

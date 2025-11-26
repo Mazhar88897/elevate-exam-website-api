@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Eye, EyeOff } from "lucide-react"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Highlight } from '@/components/pages/Highlight';
+import toast from 'react-hot-toast'
 
 // Password Validation Component
 const PasswordValidation = ({ password }: { password: string }) => {
@@ -124,7 +125,8 @@ const Page = () => {
       sessionStorage.setItem('signupName', formData.name);
       
       // Redirect to OTP screen
-      router.push('/auth/otp');
+      toast.success('Please check your email for the Activation Link.');
+      router.push('/auth/sign-in');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

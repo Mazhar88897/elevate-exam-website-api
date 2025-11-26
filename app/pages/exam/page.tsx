@@ -458,8 +458,8 @@ function MobileTabs() {
             onClick={() => setActiveTab(tab as 'Topics' | 'Quiz' | 'AI Assistant' | 'Notes')}
             className={`flex-1 text-center text-sm py-4 font-semibold transition border-b-2 ${
               activeTab === tab
-                ? 'border-yellow-500 border-b-4 text-[#ffd404]'
-                : 'border-transparent text-gray-500 hover:text-[#ffd404]'
+                ? 'border-xcolor border-b-4 text-xcolor'
+                : 'border-transparent text-gray-500 hover:text-xcolor'
             }`}
           >
             {tab.toUpperCase()}
@@ -1657,18 +1657,18 @@ function QuizPage() {
         <div className="flex gap-3">
           <div
             onClick={() => setTab("ai")}
-            className={`flex items-center cursor-pointer px-0 font-bold text-sm mr-2 transition-colors ${tab === "ai" ? "text-[#ffd404]" : "text-gray-700"}`}
+            className={`flex items-center cursor-pointer px-0 font-bold text-sm mr-2 transition-colors ${tab === "ai" ? "text-xcolor" : "text-gray-700"}`}
             style={{ userSelect: 'none' }}
           >
-            <Sparkles className={`mr-1 w-4 h-4 ${tab === "ai" ? "text-[#ffd404]" : "text-gray-400"}`} strokeWidth={3} />
+            <Sparkles className={`mr-1 w-4 h-4 ${tab === "ai" ? "text-xcolor" : "text-gray-400"}`} strokeWidth={3} />
             AI Assistant
           </div>
           <div
             onClick={() => setTab("notes")}
-            className={`flex items-center cursor-pointer px-0 font-bold text-sm transition-colors ${tab === "notes" ? "text-[#ffd404]" : "text-gray-700"}`}
+            className={`flex items-center cursor-pointer px-0 font-bold text-sm transition-colors ${tab === "notes" ? "text-xcolor" : "text-gray-700"}`}
             style={{ userSelect: 'none' }}
           >
-            <FileCheck2 className={`mr-1 w-4 h-4 ${tab === "notes" ? "text-[#ffd404]" : "text-gray-400"}`} strokeWidth={3} />
+            <FileCheck2 className={`mr-1 w-4 h-4 ${tab === "notes" ? "text-xcolor" : "text-gray-400"}`} strokeWidth={3} />
             Add Notes
           </div>
         </div>
@@ -2141,8 +2141,8 @@ function QuizPageMobile({ currentChapterIndex = 0, currentQuestionIndex = 0 }: Q
               >
                 {flaggedQuestions[currentChapterIndexState][currentQuestionIndexState] ? (
                   <div className="flex items-center">
-                    <Flag className="h-3 mr-1 w-3 text-yellow-500" strokeWidth={3} />
-                    <span className="text-sm font-bold text-yellow-500">Flagged</span>
+                    <Flag className="h-3 mr-1 w-3 text-xcolor" strokeWidth={3} />
+                    <span className="text-sm font-bold text-xcolor">Flagged</span>
                   </div>
                 ) : (
                   <div className="flex items-center">
@@ -2362,7 +2362,7 @@ interface Message {
           <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`${
-                message.role === "user" ? "bg-[#f0f0ff] dark:bg-[#ffd404]" : "bg-gray-100 text-gray-800 dark:text-white  dark:bg-[#111111]"
+                message.role === "user" ? "bg-[#f0f0ff] dark:bg-xcolor" : "bg-gray-100 text-gray-800 dark:text-white  dark:bg-[#111111]"
               } rounded-lg p-3 ${message.role === "user" ? "max-w-[75%]" : "max-w-[85%]"} ${message.isThinking ? "animate-pulse" : ""}`}
             >
               {message.content}
@@ -2383,7 +2383,7 @@ interface Message {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button onClick={handleSendMessage} className="bg-[#ffd404] text-white px-3 py-2 rounded flex items-center justify-center">
+        <button onClick={handleSendMessage} className="bg-xcolor text-white px-3 py-2 rounded flex items-center justify-center">
           <Send className="w-5 h-5" />
         </button>
       </div>

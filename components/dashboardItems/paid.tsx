@@ -164,7 +164,7 @@ function Domain({
               className={`h-8 w-8 rounded-full border flex items-center justify-center ${
                 isIndustryLeftDisabled
                   ? "text-gray-300 border-gray-200 cursor-not-allowed"
-                  : "text-[#ffd404] border-[#ffd404]"
+                  : "text-xcolor border-xcolor"
               }`}
               onClick={handleIndustryLeft}
               disabled={isIndustryLeftDisabled}
@@ -176,7 +176,7 @@ function Domain({
               className={`h-8 w-8 rounded-full border flex items-center justify-center ${
                 isIndustryRightDisabled
                   ? "text-gray-300 border-gray-200 cursor-not-allowed"
-                  : "text-[#ffd404] border-[#ffd404]"
+                  : "text-xcolor border-xcolor"
               }`}
               onClick={handleIndustryRight}
               disabled={isIndustryRightDisabled}
@@ -199,7 +199,7 @@ function Domain({
                   onClick={() => onDomainSelect(domain)}
                   className={`px-4 py-2 text-xs font-semibold whitespace-nowrap transition ${
                     selectedDomain?.id === domain.id
-                      ? "border-b-4 border-[#ffd404] text-black dark:text-white "
+                      ? "border-b-4 border-xcolor text-black dark:text-white "
                       : "text-gray-700 dark:text-gray-300"
                   }`}
                 >
@@ -217,7 +217,7 @@ function Domain({
                 onClick={() => onDomainSelect(domain)}
                 className={`px-4 py-2 text-xs font-semibold whitespace-nowrap transition ${
                   selectedDomain?.id === domain.id
-                    ? "border-b-4 border-[#ffd404] text-black dark:text-white "
+                    ? "border-b-4 border-xcolor text-black dark:text-white "
                     : "text-gray-700 dark:text-gray-300"
                 }`}
               >
@@ -232,7 +232,7 @@ function Domain({
 }
 
 // Main component combining Domain and Course Tabs
-export default function Component() {
+export default function PaidComponent() {
   const router = useRouter()
   const [visibleSubjectsCount, setVisibleSubjectsCount] = useState(SUBJECTS_PER_LOAD)
   const [visibleLibraryCount, setVisibleLibraryCount] = useState(SUBJECTS_PER_LOAD)
@@ -334,25 +334,21 @@ export default function Component() {
 
   if (loading) {
     return (
-      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
+      <div className="py-2 p-4 rounded-[10px] text-black dark:text-white ">
         <div className="mx-auto">
           <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">All Domains</h2>
-            </div>
-            <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
+            
+            <div className="w-full  my-8">
               <div className="text-center py-8">
                 <div className="flex justify-center space-x-1">
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-center py-8">
-            <div className="text-lg">Loading courses...</div>
-          </div>
+         
         </div>
       </div>
     )
@@ -369,7 +365,7 @@ export default function Component() {
   if (!loading && !error && domainList.length === 0) {
     return (
       <Link href="/dashboard/add-domain">
-      <div className="w-full flex flex-col items-center justify-center py-12 gap-6">
+      <div className="w-full bg-background flex flex-col items-center justify-center py-12 gap-6">
         <Image src="/nothing.svg" alt="Nothing to show" width={260} height={260} />
        
           <p className=" text-foreground text-sm font-semibold">
@@ -383,7 +379,7 @@ export default function Component() {
   }
 
   return (
-    <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
+    <div className="mb-8 px-2 rounded-[10px] text-black dark:text-white ">
       <div className="mx-auto">
         
        
@@ -405,13 +401,13 @@ export default function Component() {
           <TabsList className="bg-transparent border-b border-zinc-300 dark:border-zinc-800 mb-8 justify-start h-auto p-0">
             <TabsTrigger
               value="top-subjects"
-              className="relative px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-yellow-400 rounded-none"
+              className="relative px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-xcolor rounded-none"
             >
               Currently studying
             </TabsTrigger>
             <TabsTrigger
               value="certification-prep"
-              className="relative px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-yellow-400 rounded-none"
+              className="relative px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-xcolor rounded-none"
             >
               Course library
             </TabsTrigger>
@@ -432,7 +428,7 @@ export default function Component() {
                      
                       <div
                         key={course.id}
-                        className="flex hover:pointer flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
+                        className="flex hover:pointer flex-row text-xs sm:text-md items-center text-black dark:text-white hover:text-xcolor dark:hover:text-xcolor justify-start h-auto p-4 border border-gray-800 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
                         onClick={() => {
                          sessionStorage.setItem('course_id', course.id.toString());
                          sessionStorage.setItem('course_name', course.name);
@@ -451,7 +447,7 @@ export default function Component() {
                 
                 {hasMoreSubjects && (
                   <div className="mt-9 text-center">
-                    <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
+                    <div onClick={handleLoadMore} className="inline-flex font-bold items-center text-xcolor hover:text-yellow-300 cursor-pointer">
                       load more
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </div>
@@ -476,7 +472,7 @@ export default function Component() {
                      
                       <div
                         key={course.id}
-                        className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-[#ffd404] dark:hover:text-[#ffd404] justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
+                        className="flex flex-row items-center text-xs sm:text-md text-black dark:text-white hover:text-xcolor dark:hover:text-xcolor justify-start h-auto p-4 border border-gray-600 dark:border-white rounded-[6px] text-left bg-white dark:bg-black hover:bg-[#282434] dark:hover:bg-[#282434] transition-colors gap-3 cursor-pointer"
                         onClick={() => {
                           handleRegisterCourse(course.id)
                           sessionStorage.setItem('course_id', course.id.toString());
@@ -495,7 +491,7 @@ export default function Component() {
                 
                 {hasMoreLibrary && (
                   <div className="mt-9 text-center">
-                    <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-[#ffd404] hover:text-yellow-300 cursor-pointer">
+                    <div onClick={handleLoadMoreLibrary} className="inline-flex font-bold items-center text-xcolor hover:text-yellow-300 cursor-pointer">
                       load more
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </div>

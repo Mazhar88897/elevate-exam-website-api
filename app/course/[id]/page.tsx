@@ -103,9 +103,9 @@ export default function CoursePage() {
           <div className="flex-1 px-4">
             <div className="text-center py-8">
               <div className="flex justify-center space-x-1">
-                <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-2 h-2 bg-[#ffd404] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
               </div>
               <div className="text-lg mt-4">Loading course details...</div>
             </div>
@@ -193,7 +193,7 @@ export default function CoursePage() {
             <button
               onClick={() => setActiveTab("about")}
               className={`px-4 text-xs py-2 rounded-mid ${
-                activeTab === "about" ? "bg-[#ffd404] text-white" : "bg-[#f0f0ff]  text-[#ffd404]"
+                activeTab === "about" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
               }`}
             >
              <p className="font-bold text-xs"> About the Course</p>
@@ -201,7 +201,7 @@ export default function CoursePage() {
             <button
               onClick={() => setActiveTab("announcement")}
               className={`px-4 text-xs py-2 rounded-md ${
-                activeTab === "announcement" ? "bg-[#ffd404] text-white" : "bg-[#f0f0ff] text-[#ffd404]"
+                activeTab === "announcement" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
               }`}
             >
               <p className="font-bold text-xs">Announcement</p>

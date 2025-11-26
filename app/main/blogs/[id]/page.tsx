@@ -63,9 +63,9 @@ export default function BlogPostHeader() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "-0.3s" }}></span>
-          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "-0.15s" }}></span>
-          <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce"></span>
+          <span className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: "-0.3s" }}></span>
+          <span className="w-3 h-3 bg-xcolor rounded-full animate-bounce" style={{ animationDelay: "-0.15s" }}></span>
+          <span className="w-3 h-3 bg-xcolor rounded-full animate-bounce"></span>
         </div>
       </div>
     )

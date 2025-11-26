@@ -83,7 +83,7 @@ export default function HelpPage() {
           <Card className="">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-[#ffd404]" />
+                <MessageSquare className="h-5 w-5 text-xcolor" />
                 Contact Support 
               </CardTitle>
               <CardDescription>
@@ -174,21 +174,21 @@ export default function HelpPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-[#185abd] dark:text-[#ffd404]  mt-0.5" />
+                  <Mail className="h-5 w-5 text-[#185abd] dark:text-xcolor  mt-0.5" />
                   <div>
                     <p className="font-medium text-sm">Email Support</p>
-                    <a href="mailto:support@.com" className="text-sm text-[#185abd] dark:text-[#ffd404]  hover:underline">
+                    <a href="mailto:support@.com" className="text-sm text-[#185abd] dark:text-xcolor  hover:underline">
                       support@elevate.com
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-[#185abd] dark:text-[#ffd404]  mt-0.5" />
+                  <Phone className="h-5 w-5 text-[#185abd] dark:text-xcolor  mt-0.5" />
                   <div>
                     <p className="font-medium text-sm">Phone Support</p>
                     <p className="text-sm">Mon-Fri, 9AM-5PM EST</p>
-                    <a href="tel:+18001234567" className="text-sm text-[#185abd] dark:text-[#ffd404]  hover:underline">
+                    <a href="tel:+18001234567" className="text-sm text-[#185abd] dark:text-xcolor  hover:underline">
                       +1 (800) 123-4567
                     </a>
                   </div>
@@ -203,7 +203,7 @@ export default function HelpPage() {
               <CardContent>   
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-xs   hover:text-[#ffd404]/90 font-medium">How do I reset my password?</AccordionTrigger>
+                    <AccordionTrigger className="text-xs   hover:text-xcolor/90 font-medium">How do I reset my password?</AccordionTrigger>
                     <AccordionContent className="text-xs text-gray-600">
                       <p>To reset your password:</p>
                       <ol className="list-decimal pl-5 mt-2 space-y-1">
@@ -221,7 +221,7 @@ export default function HelpPage() {
                   </AccordionItem>
 
                   <AccordionItem value="item-2">
-                    <AccordionTrigger className="text-xs  hover:text-[#ffd404]/90 font-medium">Where are my certificates?</AccordionTrigger>
+                    <AccordionTrigger className="text-xs  hover:text-xcolor/90 font-medium">Where are my certificates?</AccordionTrigger>
                     <AccordionContent className="text-xs text-gray-600">
                       <p>You can find your course completion certificates in your profile section:</p>
                       <ol className="list-decimal pl-5 mt-2 space-y-1">
@@ -237,7 +237,7 @@ export default function HelpPage() {
                   </AccordionItem>
 
                   <AccordionItem value="item-3">
-                    <AccordionTrigger className="text-xs  hover:text-[#ffd404]/90 font-medium">
+                    <AccordionTrigger className="text-xs  hover:text-xcolor/90 font-medium">
                       How do I update my payment method?
                     </AccordionTrigger>
                     <AccordionContent className="text-xs text-gray-600">
@@ -257,7 +257,7 @@ export default function HelpPage() {
                   </AccordionItem>
 
                   <AccordionItem value="item-4">
-                    <AccordionTrigger className="text-xs  hover:text-[#ffd404]/90 font-medium">
+                    <AccordionTrigger className="text-xs  hover:text-xcolor/90 font-medium">
                       How do I track my course progress?
                     </AccordionTrigger>
                     <AccordionContent className="text-xs text-gray-600">

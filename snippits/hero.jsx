@@ -26,7 +26,7 @@
 //           {[...Array(5)].map((_, i) => (
 //             <svg
 //               key={i}
-//               className={`w-4 h-4 ${i < rating ? "text-[#ffd404]" : "text-gray-300"}`}
+//               className={`w-4 h-4 ${i < rating ? "text-xcolor" : "text-gray-300"}`}
 //               fill="currentColor"
 //               viewBox="0 0 20 20"
 //             >
@@ -83,7 +83,7 @@
 //             rating={4.5}
 //             mentor="IT & Cybersecurity"
 //             tag="Java"
-//             tagColor="bg-yellow-500"
+//             tagColor="bg-xcolor"
 //           />
 //         </HoverCard>
 //         <HoverCard width={300} height={320} className="p-4">
@@ -94,7 +94,7 @@
 //             rating={4.5}
 //             mentor="IT & Cybersecurity"
 //             tag="Java"
-//             tagColor="bg-yellow-500"
+//             tagColor="bg-xcolor"
 //           />
 //         </HoverCard>
 //         </div>

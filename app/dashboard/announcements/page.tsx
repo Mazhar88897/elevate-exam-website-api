@@ -63,7 +63,7 @@ export default function AnnouncementsPage() {
       case "info":
         return <Info className="h-5 w-5 text-blue-500" />
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />
+        return <AlertCircle className="h-5 w-5 text-xcolor" />
       case "success":
         return <CheckCircle className="h-5 w-5 text-green-500" />
       case "urgent":
@@ -154,7 +154,7 @@ export default function AnnouncementsPage() {
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-2">
-              <Loader2 className="h-6 w-6 animate-spin text-[#ffd404]" />
+              <Loader2 className="h-6 w-6 animate-spin text-xcolor" />
               <span className="text-gray-600">Loading announcements...</span>
             </div>
           </div>

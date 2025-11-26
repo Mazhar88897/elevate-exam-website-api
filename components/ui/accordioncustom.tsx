@@ -31,10 +31,10 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       <div className="flex items-center gap-2">
-        <HelpCircle className="h-4 w-4 text-[#ffd404] flex-shrink-0" />
+        <HelpCircle className="h-4 w-4 text-xcolor flex-shrink-0" />
         {children}
       </div>
-      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 text-[#ffd404]" />
+      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 text-xcolor" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))

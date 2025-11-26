@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, MoreHorizontal, AlertTriangle } from "lucide-react"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -62,9 +62,19 @@ export default function NotesApp() {
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [noteToView, setNoteToView] = useState<Note | null>(null)
+  
+  // Ref to track if fetch has been initiated (prevents duplicate fetches in Strict Mode)
+  const hasFetchedRef = useRef(false)
 
   // Fetch notes from API
   useEffect(() => {
+    // Prevent duplicate fetches (especially in React Strict Mode)
+    if (hasFetchedRef.current) {
+      return
+    }
+    
+    hasFetchedRef.current = true
+    
     const fetchNotes = async () => {
       try {
         setLoading(true)
@@ -88,6 +98,8 @@ export default function NotesApp() {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching notes'
         setError(errorMessage)
         console.error('Error fetching notes:', err)
+        // Reset ref on error so it can retry if needed
+        hasFetchedRef.current = false
       } finally {
         setLoading(false)
       }
@@ -239,7 +251,7 @@ export default function NotesApp() {
             <input
               type="text"
               placeholder="search "
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#ffd404]"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-xcolor"
               onChange={(e) => setSearchQuery(e.target.value)}
               value={searchQuery}
             />
@@ -249,7 +261,7 @@ export default function NotesApp() {
             <p className="text-sm font-bold">
               Total Notes: <span className="font-bold">{notes.length}</span>
             </p>
-            <Button variant="default" className="bg-[#ffd404] text-white rounded-mid font-bold hover:bg-[#ffd404]/90" onClick={openAddModal}>
+            <Button variant="default" className="bg-xcolor hover:bg-xcolor/90 text-white rounded-mid font-bold " onClick={openAddModal}>
               + Add Note
             </Button>
           </div>
@@ -260,7 +272,7 @@ export default function NotesApp() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#ffd404] border-t-transparent"></div>
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-xcolor border-t-transparent"></div>
             <span className="text-gray-600">Loading notes...</span>
           </div>
         </div>
@@ -458,7 +470,7 @@ export default function NotesApp() {
                     openEditModal(noteToView)
                   }
                 }}
-                className="bg-[#ffd404] text-white hover:bg-[#ffd404]/90"
+                className="bg-xcolor text-white hover:bg-xcolor/90"
               >
                 Edit Note
               </Button>
