@@ -6,12 +6,13 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { Highlight } from '@/components/pages/Highlight'
-
+import { useRouter } from 'next/navigation'
+import { toast } from 'react-hot-toast'
 const Page = () => {
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ||
     'https://elevate-backend.up.railway.app'
-
+  const router = useRouter()
   const [formData, setFormData] = useState({
     email: ''
   })
@@ -61,7 +62,8 @@ const Page = () => {
 
       setSuccess(true)
       setFormData({ email: '' })
-      console.log('Password reset email sent')
+      toast.success('Password reset email sent. Please check your email for the reset link.')
+      router.push('/auth/sign-in')
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
