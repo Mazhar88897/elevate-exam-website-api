@@ -47,7 +47,7 @@ export default function Home() {
       <Accords />
       <Qouatation />
       <Owner />
-      {/* <Blogs /> */}
+      <Blogs />
       <Footer />
 
     </main>

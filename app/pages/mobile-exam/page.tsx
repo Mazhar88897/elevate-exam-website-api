@@ -314,14 +314,7 @@ function QuizPage() {
   const [activeTab, setActiveTab] = useState<"courses" | "quiz" | "ai" | "note">("quiz")
   
   // Debug: Log state values
-  console.log('=== CURRENT STATE ===')
-  console.log('progress:', progress)
-  console.log('chapterProgress:', chapterProgress)
-  console.log('apiSubtopicProgress:', apiSubtopicProgress)
-  console.log('completedQuestions count:', completedQuestions.flat(2).filter(Boolean).length)
-  console.log('progressInitializedFromAPI:', progressInitializedFromAPI)
-  console.log('shouldUpdateProgress:', shouldUpdateProgress)
-  console.log('========================')
+ 
 
   // Fetch questions from API
   const fetchQuestions = async (): Promise<ApiQuestionsResponse | null> => {

@@ -22,6 +22,7 @@ export default function AccountPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState<string>('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -49,7 +50,7 @@ export default function AccountPage() {
   }
 
   const handleSaveChanges = async () => {
-    if (!Token) {
+    if (!token) {
       console.error('No token found')
       return
     }
@@ -75,7 +76,7 @@ export default function AccountPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `${Token}`,
+          'Authorization': `${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
@@ -98,12 +99,17 @@ export default function AccountPage() {
     }
   }
 
-  const Token = sessionStorage.getItem('Authorization') || '';
-
   // Fetch user data from API
   useEffect(() => {
+    // Safely access sessionStorage only on client side
+    const authToken = typeof window !== 'undefined' 
+      ? sessionStorage.getItem('Authorization') || '' 
+      : ''
+    
+    setToken(authToken)
+
     const fetchUserData = async () => {
-      if (!Token) {
+      if (!authToken) {
         console.log('No token found in sessionStorage')
         setLoading(false)
         return
@@ -113,7 +119,7 @@ export default function AccountPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
           method: 'GET',
           headers: {
-            'Authorization': `${Token}`,
+            'Authorization': `${authToken}`,
             'Content-Type': 'application/json',
           },
         })
@@ -141,7 +147,7 @@ export default function AccountPage() {
     }
 
     fetchUserData()
-  }, [Token])
+  }, [])
   
 
 
