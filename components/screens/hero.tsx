@@ -48,7 +48,7 @@ const hero = () => {
               Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor.
             </p>
             
-            <CustomButton href="/get-started" size="lg">
+            <CustomButton href="/auth/sign-up" size="lg">
               <span className="text-sm font-semibold">Get Started</span>
             </CustomButton>
           </div>
