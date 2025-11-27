@@ -82,11 +82,18 @@ export function AIChatInterface() {
     setMessages((prevMessages) => [...prevMessages, thinkingMessage])
 
     try {
-      const courseId = sessionStorage.getItem('course_id')
+      const storedCourseName = sessionStorage.getItem('course_name')
+      const courseName = storedCourseName
+        ? storedCourseName
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+        : ''
       const authToken = sessionStorage.getItem('Authorization')
 
-      if (!courseId) {
-        throw new Error('Course ID not found')
+      if (!storedCourseName) {
+        throw new Error('Course Name not found')
       }
 
       if (!authToken) {
@@ -100,7 +107,7 @@ export function AIChatInterface() {
           'Authorization': authToken,
         },
         body: JSON.stringify({
-          course_id: "cism",
+          course_id: courseName || "cism",
           query: query,
           history: history,
         }),
