@@ -59,8 +59,8 @@ export const SupportModal = () => {
   const { isOpen, closeModal } = useContext(SupportModalContext)!
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: sessionStorage.getItem('name') || "",
-    email: sessionStorage.getItem('email') || "",
+    name: "",
+    email: "",
     subject: "",
     message: "",
     topic: "technical",
@@ -94,8 +94,8 @@ export const SupportModal = () => {
       toast.success("Message sent successfully! Our support team will get back to you within 24 hours.")
 
       setFormData({
-        name: sessionStorage.getItem('name') || "",
-        email: sessionStorage.getItem('email') || "",
+        name: "",
+        email: "",
         subject: "",
         message: "",
         topic: "technical",

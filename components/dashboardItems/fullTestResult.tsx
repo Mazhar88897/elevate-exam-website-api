@@ -150,6 +150,8 @@ export default function QuizResultsPage() {
         setLoading(true)
         setError(null)
         
+        if (typeof window === 'undefined') return
+        
         const courseId = sessionStorage.getItem('course_id')
         const token = sessionStorage.getItem('Authorization')
         
@@ -300,7 +302,7 @@ export default function QuizResultsPage() {
             id: index + 1, // Serial number instead of question ID
             text: apiQuestion.text,
             status,
-            category: sessionStorage.getItem('course_name') || "", // You can modify this based on your needs
+            category: typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || "" : "", // You can modify this based on your needs
             explanation: apiQuestion.explanation,
             correct_option: correctOptionText,
             isFlagged: progressQuestion?.is_flagged || false
@@ -407,7 +409,7 @@ export default function QuizResultsPage() {
           {/* Left side - Title and Status */}
           <div className="mb-6 md:mb-0 md:max-w-[60%]">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-             {sessionStorage.getItem('course_name')}
+             {typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || '' : ''}
             </h2>
             <div className="flex items-center gap-6 text-sm">
               <div className="flex font-bold items-center gap-2">

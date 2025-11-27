@@ -179,6 +179,8 @@ export default function QuizResultsPage() {
         setLoading(true)
         setError(null)
         
+        if (typeof window === 'undefined') return
+        
         const courseId = sessionStorage.getItem('course_id')
         const token = sessionStorage.getItem('Authorization')
         
@@ -317,7 +319,7 @@ export default function QuizResultsPage() {
                 id: questionNumber++,
                 text: apiQuestion.text,
                 status,
-                category: sessionStorage.getItem('course_name') || "",
+                category: typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || "" : "",
                 explanation: apiQuestion.explanation,
                 correct_option: correctOptionText,
                 isFlagged: progressQuestion?.is_flagged || false
@@ -401,7 +403,7 @@ export default function QuizResultsPage() {
             
 
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-             {sessionStorage.getItem('course_name')} Quiz.
+             {typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || '' : ''} Quiz.
             </h2>
             <div className="flex items-center gap-6 text-sm">
               <div className="flex font-bold items-center gap-2">

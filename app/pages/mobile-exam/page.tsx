@@ -313,9 +313,15 @@ function QuizPage() {
   // Fetch questions from API
   const fetchQuestions = async (): Promise<ApiQuestionsResponse | null> => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${sessionStorage.getItem('course_id')}/question_page/`, {
+      if (typeof window === 'undefined') return null
+      
+      const courseId = sessionStorage.getItem('course_id')
+      const authToken = sessionStorage.getItem('Authorization')
+      if (!courseId || !authToken) return null
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/question_page/`, {
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`
+          'Authorization': authToken
         }
       })
       
@@ -371,10 +377,16 @@ function QuizPage() {
   // Fetch progress from API
   const fetchProgress = async (questionsData: ApiQuestionsResponse | null = null) => {
     try {
+      if (typeof window === 'undefined') return
+      
+      const courseId = sessionStorage.getItem('course_id')
+      const authToken = sessionStorage.getItem('Authorization')
+      if (!courseId || !authToken) return
+      
       console.log('=== FETCHING PROGRESS ===')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/progress/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/progress/`, {
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`
+          'Authorization': authToken
         }
       })
       
@@ -638,6 +650,11 @@ function QuizPage() {
 
   // Submit handler
   const submitHandler = async (questionId: number, selectedOption: number | null, isFlagged: boolean) => {
+    if (typeof window === 'undefined') return
+    
+    const authToken = sessionStorage.getItem('Authorization')
+    if (!authToken) return
+    
     setIsQuestionSubmitting(true)
     const payload = {
       question_id: questionId,
@@ -650,7 +667,7 @@ function QuizPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `${sessionStorage.getItem('Authorization')}`
+          "Authorization": authToken
         },
         body: JSON.stringify(payload),
       });
@@ -965,12 +982,17 @@ function QuizPage() {
   }
 
   const  handleSubmitQuiz = async () => {
+    if (typeof window === 'undefined') return
    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/submit/`, {
+    const courseId = sessionStorage.getItem('course_id')
+    const authToken = sessionStorage.getItem('Authorization')
+    if (!courseId || !authToken) return
+   
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/submit/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `${sessionStorage.getItem('Authorization')}`
+        "Authorization": authToken
       },
     })  
     if (response.ok) {
@@ -983,15 +1005,21 @@ function QuizPage() {
 
   // Handle quit quiz button - show confirmation modal
   const handleQuitQuiz = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${sessionStorage.getItem('course_id')}/quit/`, {
+    if (typeof window === 'undefined') return
+    
+    const courseId = sessionStorage.getItem('course_id')
+    const authToken = sessionStorage.getItem('Authorization')
+    if (!courseId || !authToken) return
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/quit/`, {
       method: "POST",
       headers: {
-        "Authorization": `${sessionStorage.getItem('Authorization')}`
+        "Authorization": authToken
       }
     })
     if (response.ok){
     toast.success("Quiz quitted successfully")
-    router.push(`/course/${sessionStorage.getItem('course_id')}`)
+    router.push(`/course/${courseId}`)
     } else {
       console.error("Failed to quit quiz")
     } 
@@ -1203,18 +1231,23 @@ function Notes() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     
+    if (typeof window === 'undefined') return
+    
     // Validate fields
     if (!title.trim() || !content.trim()) {
       toast.error("Please fill these fields first")
       return
     }
     
+    const authToken = sessionStorage.getItem('Authorization')
+    if (!authToken) return
+    
     setSubmitLoading(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
         method: 'POST',
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`,
+          'Authorization': authToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

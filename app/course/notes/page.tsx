@@ -66,8 +66,11 @@ export default function NotesApp() {
   // Ref to track if fetch has been initiated (prevents duplicate fetches in Strict Mode)
   const hasFetchedRef = useRef(false)
 
-  // Fetch notes from API
+  // Fetch notes from API (client-only)
   useEffect(() => {
+    // Ensure this runs only in the browser
+    if (typeof window === "undefined") return
+
     // Prevent duplicate fetches (especially in React Strict Mode)
     if (hasFetchedRef.current) {
       return
@@ -79,25 +82,30 @@ export default function NotesApp() {
       try {
         setLoading(true)
         setError(null)
+
+        const token = sessionStorage.getItem("Authorization")
+        if (!token) {
+          throw new Error("Missing authorization token")
+        }
         
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `${sessionStorage.getItem('Authorization')}`,
-            'Content-Type': 'application/json',
+            "Authorization": token,
+            "Content-Type": "application/json",
           },
         })
 
         if (!response.ok) {
-          throw new Error('Failed to fetch notes')
+          throw new Error("Failed to fetch notes")
         }
 
         const data = await response.json()
         setNotes(data)
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching notes'
+        const errorMessage = err instanceof Error ? err.message : "An error occurred while fetching notes"
         setError(errorMessage)
-        console.error('Error fetching notes:', err)
+        console.error("Error fetching notes:", err)
         // Reset ref on error so it can retry if needed
         hasFetchedRef.current = false
       } finally {
@@ -117,10 +125,14 @@ export default function NotesApp() {
   const handleAddNote = async (note: Omit<NoteModalNote, "id">) => {
     try {
       setOperationLoading(true)
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("Authorization") : null
+      if (!token) {
+        throw new Error("Missing authorization token")
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/`, {
         method: 'POST',
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`,
+          'Authorization': token,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -148,10 +160,14 @@ export default function NotesApp() {
   const handleEditNote = async (note: NoteModalNote) => {
     try {
       setOperationLoading(true)
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("Authorization") : null
+      if (!token) {
+        throw new Error("Missing authorization token")
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/${note.id}/`, {
         method: 'PUT',
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`,
+          'Authorization': token,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -190,10 +206,14 @@ export default function NotesApp() {
 
     try {
       setOperationLoading(true)
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("Authorization") : null
+      if (!token) {
+        throw new Error("Missing authorization token")
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/notes/${noteToDelete.id}/`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`,
+          'Authorization': token,
           'Content-Type': 'application/json',
         },
       })
