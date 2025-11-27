@@ -12,6 +12,8 @@ interface CustomButtonProps {
   onClick?: () => void
   href?: string
   target?: "_blank" | "_self" | "_parent" | "_top"
+  type?: "button" | "submit" | "reset"
+  disabled?: boolean
 }
 
 export function CustomButton({
@@ -22,6 +24,8 @@ export function CustomButton({
   onClick,
   href,
   target,
+  type = "button",
+  disabled = false,
 }: CustomButtonProps) {
   const baseStyles =
     "relative inline-flex items-center justify-center rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -57,7 +61,7 @@ export function CustomButton({
           {children}
         </Link>
       ) : (
-        <button className={combinedStyles} onClick={onClick}>
+        <button type={type} className={combinedStyles} onClick={onClick} disabled={disabled}>
           {children}
         </button>
       )}
