@@ -252,7 +252,7 @@ export default function CourseLandingPage() {
             <p className="text-gray-600 text-sm mb-6">
               This course covers essential concepts and practical applications. 
               With {courseData.total_chapters} chapters and {courseData.total_questions} questions, 
-              you'll gain comprehensive knowledge in this field.
+              you&apos;ll gain comprehensive knowledge in this field.
             </p>
 
             <div className="space-y-4">

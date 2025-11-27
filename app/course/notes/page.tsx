@@ -378,7 +378,7 @@ export default function NotesApp() {
           
           <div className="py-4">
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete the note <strong>"{noteToDelete?.title}"</strong>? 
+              Are you sure you want to delete the note <strong>&quot;{noteToDelete?.title}&quot;</strong>? 
               This will permanently remove the note from your collection.
             </p>
           </div>

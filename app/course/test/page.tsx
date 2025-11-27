@@ -558,7 +558,7 @@ function QuizPage() {
               Quit Quiz?
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Are you sure you want to quit? All your progress will be lost and you won't be able to recover it.
+              Are you sure you want to quit? All your progress will be lost and you won&apos;t be able to recover it.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -586,7 +586,7 @@ function QuizPage() {
               Submit Quiz?
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Are you sure you want to submit your quiz? Once submitted, you won't be able to make any changes to your answers.
+              Are you sure you want to submit your quiz? Once submitted, you won&apos;t be able to make any changes to your answers.
             </p>
             <div className="flex gap-3 justify-end">
               <button

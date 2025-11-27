@@ -126,7 +126,7 @@ const Page = () => {
             <div>
               <h2 className="text-xl font-bold text-slate-800 mb-1">Sign In to <Highlight>Elevate Exams</Highlight></h2>
               <p className="text-slate-600 text-sm">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/auth/sign-up" className="text-blue-700 hover:underline font-semibold">
                   Create one here
                 </Link>
