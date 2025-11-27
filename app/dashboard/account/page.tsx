@@ -88,6 +88,14 @@ export default function AccountPage() {
         setUserData(updatedData)
         setHasChanges(false)
         toast.success('Profile updated successfully!')
+        sessionStorage.setItem('name', updatedData.name)
+        sessionStorage.setItem('email', updatedData.email)
+        sessionStorage.setItem('description', updatedData.description)
+        setFormData(prev => ({
+          ...prev,
+          password: '',
+          confirmPassword: ''
+        }))
       } else {
         const errorData = await response.json()
         console.error('Update failed:', errorData)
@@ -156,10 +164,7 @@ export default function AccountPage() {
     <div className="min-h-screen">
       <header className="flex items-center justify-between p-4 md:p-6">
         <h1 className="text-lg  px-10  md:px-2  font-bold">Account Settings</h1>
-        {/* <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center text-white">J</div>
-          <span className="hidden md:inline text-sm text-gray-600">John Drew</span>
-        </div> */}
+   
       </header>
 
       {/* Debug Information */}
@@ -189,18 +194,7 @@ export default function AccountPage() {
             </div>
 
             {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input 
-                id="email" 
-                name="email"
-                type="email" 
-                placeholder="john@example.com" 
-                value={formData.email} 
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
+           
 
             {/* Password Field */}
             <div className="space-y-2">
