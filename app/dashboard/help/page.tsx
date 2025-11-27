@@ -109,7 +109,7 @@ export default function HelpPage() {
                   <Input 
                     id="email" 
                     type="email"  
-                    placeholder="mk0906145@gmail.com" 
+                    placeholder="john@example.com" 
                     value={formData.email}
                     onChange={handleInputChange}
                     required 

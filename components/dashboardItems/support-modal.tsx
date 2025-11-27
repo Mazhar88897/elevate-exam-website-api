@@ -61,8 +61,8 @@ export const SupportModal = () => {
   const [submitted, setSubmitted] = useState(false)
   const [topic, setTopic] = useState("technical")
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setLoading(true)
 
     // Simulate API call
@@ -83,6 +83,7 @@ export const SupportModal = () => {
         <Dialog open={isOpen} onOpenChange={closeModal}>
       <DialogContent className=" sm:max-w-[400px]">
         
+        
         <Card className="border-0 shadow-none">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center gap-2">
@@ -92,15 +93,7 @@ export const SupportModal = () => {
             <CardDescription className="text-xs">Fill out the form below to report an issue or get help with your account</CardDescription>
           </CardHeader>
           <CardContent className="px-0 text-xs pb-0">
-            {submitted ? (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">Message Sent!</AlertTitle>
-                <AlertDescription className="text-green-700">
-                  Thank you for reaching out. Our support team will get back to you within 24 hours.
-                </AlertDescription>
-              </Alert>
-            ) : (
+          
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1 text-xs">
                   <Label className="text-xs" htmlFor="email">Your Email</Label>
@@ -115,8 +108,6 @@ export const SupportModal = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem className="text-xs" value="technical">Technical Issue</SelectItem>
-                      <SelectItem className="text-xs" value="billing">Billing Question</SelectItem>
-                      <SelectItem className="text-xs" value="account">Account Help</SelectItem>
                       <SelectItem className="text-xs" value="course">Course Content</SelectItem>
                       <SelectItem className="text-xs" value="other">Other</SelectItem>
                     </SelectContent>
@@ -148,7 +139,7 @@ export const SupportModal = () => {
                   </Button>
                 </div>
               </form>
-            )}
+        
           </CardContent>
         </Card>
       </DialogContent>
