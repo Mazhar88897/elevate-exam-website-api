@@ -270,6 +270,8 @@ function QuizPage() {
   }
 
   // Load data on component mount
+  const hasFetchedDataRef = useRef(false)
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
@@ -277,8 +279,11 @@ function QuizPage() {
       await fetchProgress()
       setLoading(false)
     }
-    
-    loadData()
+
+    if (!hasFetchedDataRef.current) {
+      hasFetchedDataRef.current = true
+      loadData()
+    }
   }, [])
 
   // Show start/continue modal when data is loaded

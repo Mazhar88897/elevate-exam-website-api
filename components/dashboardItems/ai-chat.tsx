@@ -18,14 +18,18 @@ export function AIChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (behavior: ScrollBehavior = "auto") => {
+    if (!messagesContainerRef.current) return
+    messagesContainerRef.current.scrollTo({
+      top: messagesContainerRef.current.scrollHeight,
+      behavior,
+    })
   }
 
   useEffect(() => {
-    scrollToBottom()
+    scrollToBottom(messages.length <= 1 ? "auto" : "smooth")
   }, [messages])
 
   const handleSendMessage = async (e?: React.FormEvent | React.MouseEvent) => {
@@ -183,9 +187,13 @@ export function AIChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto overflow-hidden">
+    <div className="flex flex-col py-3 h-full w-full max-w-md mx-auto overflow-hidden">
       {/* Chat messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 overscroll-contain" style={{ overflowAnchor: 'none' }}>
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 overscroll-contain"
+        style={{ overflowAnchor: 'none' }}
+      >
         {messages.length === 0 && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p className="text-sm">Start a conversation by asking a question</p>
@@ -211,7 +219,6 @@ export function AIChatInterface() {
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}

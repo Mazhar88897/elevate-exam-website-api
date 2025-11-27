@@ -2,16 +2,16 @@
 
 import type React from "react"
 import { createContext, useContext, useState } from "react"
-import { CheckCircle2, MessageSquare, X } from "lucide-react"
+import { MessageSquare } from "lucide-react"
+import { toast } from "react-hot-toast"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 // ===== Context =====
 interface SupportModalContextType {
@@ -58,36 +58,67 @@ export const useSupportModal = () => {
 export const SupportModal = () => {
   const { isOpen, closeModal } = useContext(SupportModalContext)!
   const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [topic, setTopic] = useState("technical")
+  const [formData, setFormData] = useState({
+    name: sessionStorage.getItem('name') || "",
+    email: sessionStorage.getItem('email') || "",
+    subject: "",
+    message: "",
+    topic: "technical",
+  })
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/help_center/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
 
-    setLoading(false)
-    setSubmitted(true)
+      if (!response.ok) {
+        throw new Error("Failed to send message. Please try again.")
+      }
 
-    // Reset form after 3 seconds and close modal
-    setTimeout(() => {
-      setSubmitted(false)
+      toast.success("Message sent successfully! Our support team will get back to you within 24 hours.")
+
+      setFormData({
+        name: sessionStorage.getItem('name') || "",
+        email: sessionStorage.getItem('email') || "",
+        subject: "",
+        message: "",
+        topic: "technical",
+      })
+
       closeModal()
-    }, 3000)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "An error occurred. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div  className="m-4">
         <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className=" sm:max-w-[400px]">
+      <DialogContent className=" sm: max-w-[500px]">
         
         
         <Card className="border-0 shadow-none">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-3 w-3 text-purple-600" />
+              <MessageSquare className="h-5 w-5 text-xcolor" strokeWidth={2.5}/>
               Contact Support
             </CardTitle>
             <CardDescription className="text-xs">Fill out the form below to report an issue or get help with your account</CardDescription>
@@ -95,14 +126,45 @@ export const SupportModal = () => {
           <CardContent className="px-0 text-xs pb-0">
           
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1 text-xs">
+                {/* <div className="space-y-1 text-xs">
+                  <Label className="text-xs" htmlFor="name">Full Name</Label>
+                  <Input
+                    className="text-xs"
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div> */}
+
+                {/* <div className="space-y-1 text-xs">
                   <Label className="text-xs" htmlFor="email">Your Email</Label>
-                  <Input className="text-xs" id="email" type="email" placeholder="mk0906145@gmail.com" required />
-                </div>
+                  <Input
+                    className="text-xs"
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div> */}
 
                 <div className="space-y-1">
                   <Label className="text-xs" htmlFor="topic">Topic</Label>
-                  <Select  defaultValue="technical" value={topic} onValueChange={setTopic}>
+                  <Select
+                    value={formData.topic}
+                    onValueChange={(value) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        topic: value,
+                      }))
+                    }
+                  >
                     <SelectTrigger id="topic">
                       <SelectValue className="text-xs" placeholder="Select a topic" />
                     </SelectTrigger>
@@ -116,15 +178,26 @@ export const SupportModal = () => {
 
                 <div className="space-y-1">
                   <Label className="text-xs" htmlFor="subject">Subject</Label>
-                  <Input className="text-xs" id="subject" placeholder="Brief description of your issue" required />
+                  <Input
+                    className="text-xs"
+                    id="subject"
+                    name="subject"
+                    placeholder="Brief description of your issue"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <Label className="text-xs" htmlFor="message">Message</Label>
                   <Textarea
                     id="message"
+                    name="message"
                     placeholder="Please describe your issue in detail"
                     className=" text-xs min-h-[150px]"
+                    value={formData.message}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
@@ -132,7 +205,7 @@ export const SupportModal = () => {
                 <div className="pt-2">
                   <Button
                     type="submit"
-                    className="w-full rounded-md bg-purple-600 hover:bg-purple-700"
+                    className="w-full rounded-md bg-xcolor hover:bg-xcolor/90"
                     disabled={loading}
                   >
                     {loading ? "Sending..." : "Send Message"}

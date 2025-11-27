@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { AlertTriangle, SkipForward, ChevronDown, ChevronRight, CheckCircle2, ArrowRightToLineIcon, ArrowLeftToLineIcon, Paperclip, Send, Sparkles, FileCheck2, Flag, FlagOffIcon, XIcon, Loader2, BookOpen, HelpCircle, StickyNote  } from "lucide-react"
@@ -8,6 +8,7 @@ import Access from "@/components/dashboardItems/access"
 import Link from "next/link"
 import { useSupportModal, SupportModalProvider } from "@/components/dashboardItems/support-modal"
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
+import { AIChatInterface } from "@/components/dashboardItems/ai-chat"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from '@/components/ui/button'
@@ -197,7 +198,7 @@ function MobileCoursesView({
             <div key={chapterIdx} className="space-y-2">
               {/* Chapter header */}
               <button
-                className="flex items-center justify-between w-full py-3 px-3 text-left rounded-lg border transition-colors bg-gray-50 dark:bg-gray-800"
+                className="flex items-center justify-between w-full py-3 px-3 text-left rounded-lg  transition-colors "
                 onClick={() => onToggleChapter(chapterIdx)}
               >
                 <div className="flex items-center gap-2 flex-1">
@@ -208,14 +209,7 @@ function MobileCoursesView({
                   )}
                   <span className="text-sm font-semibold flex-1">{chapter.name}</span>
                 </div>
-                <div
-                  className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2",
-                    chapterProgress[chapterIdx] === 100 ? "bg-green-500 text-white" : "border-2 border-gray-300",
-                  )}
-                >
-                  {chapterProgress[chapterIdx] === 100 && <CheckCircle2 className="h-4 w-4" />}
-                </div>
+                
               </button>
 
               {/* Chapter progress bar */}
@@ -230,9 +224,9 @@ function MobileCoursesView({
                     <div
                       key={subChapterIdx}
                       className={cn(
-                        "py-2.5 px-3 rounded-lg cursor-pointer border transition-colors",
+                        "py-2.5 px-3 rounded-lg cursor-pointer  transition-colors",
                         currentChapterIndex === chapterIdx && currentSubChapterIndex === subChapterIdx
-                          ? "bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700"
+                          ? " "
                           : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
                       )}
                       onClick={() => onNavigateToQuestion(chapterIdx, subChapterIdx, 0)}
@@ -241,7 +235,7 @@ function MobileCoursesView({
                         <span className={cn(
                           "text-sm font-medium flex-1",
                           currentChapterIndex === chapterIdx && currentSubChapterIndex === subChapterIdx
-                            ? "text-green-700 dark:text-green-300"
+                            ? "text-green-700 dark:text-green-500"
                             : "text-gray-700 dark:text-gray-300"
                         )}>
                           {subChapter.name}
@@ -273,7 +267,7 @@ function QuizPage() {
   // Course data
   const router = useRouter()
   const { openSupportModal } = useSupportModal()
-  
+  const [isQuestionSubmitting, setIsQuestionSubmitting] = useState(false)       
   // API state
   const [apiQuestions, setApiQuestions] = useState<ApiQuestionsResponse | null>(null)
   const [apiProgress, setApiProgress] = useState<ApiProgressResponse | null>(null)
@@ -590,6 +584,8 @@ function QuizPage() {
   }
 
   // Load data on mount
+  const hasFetchedDataRef = useRef(false)
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
@@ -599,8 +595,11 @@ function QuizPage() {
       }
       setLoading(false)
     }
-    
-    loadData()
+
+    if (!hasFetchedDataRef.current) {
+      hasFetchedDataRef.current = true
+      loadData()
+    }
   }, [])
 
   // Update progress locally when completedQuestions changes (only after API and when user answers)
@@ -639,6 +638,7 @@ function QuizPage() {
 
   // Submit handler
   const submitHandler = async (questionId: number, selectedOption: number | null, isFlagged: boolean) => {
+    setIsQuestionSubmitting(true)
     const payload = {
       question_id: questionId,
       selected_option: selectedOption,
@@ -663,6 +663,9 @@ function QuizPage() {
       console.log("✅ Success:", data);
     } catch (error) {
       console.error("❌ Error:", error);
+    }
+    finally   {
+      setIsQuestionSubmitting(false)
     }
   };
 
@@ -999,28 +1002,26 @@ function QuizPage() {
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
       {/* Top tab navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 safe-area-top">
-        <div className="flex items-center justify-around h-16">
+      <div className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 safe-area-top">
+        <div className="flex items-center justify-around h-14">
           <button
             onClick={() => setActiveTab("courses")}
             className={cn(
               "flex flex-col items-center justify-center flex-1 h-full transition-colors",
-              activeTab === "courses" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+              activeTab === "courses" ?  "text-xcolor border-b-2 border-xcolor" : "text-gray-500 dark:text-gray-400"
             )}
           >
-            <BookOpen className={cn("h-5 w-5 mb-1", activeTab === "courses" && "text-green-600 dark:text-green-400")} />
-            <span className="text-xs font-semibold">Courses</span>
+               <span className="text-xs font-semibold">Courses</span>
           </button>
           
           <button
             onClick={() => setActiveTab("quiz")}
             className={cn(
               "flex flex-col items-center justify-center flex-1 h-full transition-colors",
-              activeTab === "quiz" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+              activeTab === "quiz" ? "text-xcolor border-b-2 border-xcolor" : "text-gray-500 dark:text-gray-400"
             )}
           >
-            <HelpCircle className={cn("h-5 w-5 mb-1", activeTab === "quiz" && "text-green-600 dark:text-green-400")} />
-            <span className="text-xs font-semibold">Quiz</span>
+              <span className="text-xs font-semibold">Quiz</span>
           </button>
           
           <button
@@ -1030,8 +1031,7 @@ function QuizPage() {
               activeTab === "ai" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
             )}
           >
-            <Sparkles className={cn("h-5 w-5 mb-1", activeTab === "ai" && "text-green-600 dark:text-green-400")} />
-            <span className="text-xs font-semibold">AI</span>
+              <span className="text-xs font-semibold">AI</span>
           </button>
           
           <button
@@ -1041,8 +1041,7 @@ function QuizPage() {
               activeTab === "note" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
             )}
           >
-            <StickyNote className={cn("h-5 w-5 mb-1", activeTab === "note" && "text-green-600 dark:text-green-400")} />
-            <span className="text-xs font-semibold">Note</span>
+               <span className="text-xs font-semibold">Note</span>
           </button>
         </div>
       </div>
@@ -1067,7 +1066,10 @@ function QuizPage() {
         )}
 
         {activeTab === "quiz" && (
-          <div className="flex-1 overflow-y-auto flex flex-col">
+          <div className="flex-1 mx-2 overflow-y-auto flex flex-col">
+            <div>
+              <h2 className="text-lg font-semibold text-center mt-2 ">{course.courseName}</h2>
+            </div>
             {/* Progress bar */}
             <div className="w-full px-4 pt-4 pb-2">
               <Progress value={progress} className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full" />
@@ -1150,9 +1152,17 @@ function QuizPage() {
 
           {/* Continue button */}
           {isAnswered && (
-            <div className="w-32 text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid" onClick={handleContinue}>
-              Continue
-            </div>
+            <>
+            {isQuestionSubmitting ? (
+              <div className="w-32 flex items-center justify-center text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid">
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </div>
+            ) : (
+              <div className="w-32 text-sm text-center p-1 text-slate-800 dark:text-slate-300 border font-black border-gray-300 rounded-mid" onClick={handleContinue}>
+                Continue
+              </div>
+            )}
+            </>
           )}
           
 
@@ -1171,7 +1181,7 @@ function QuizPage() {
 
         {activeTab === "ai" && (
           <div className="flex-1 overflow-hidden">
-            <ChatInterface />
+            <AIChatInterface />
           </div>
         )}
 
@@ -1185,151 +1195,6 @@ function QuizPage() {
   )   
 }
   
-
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string | React.ReactNode
-  isThinking?: boolean
-}
-
-function ChatInterface() {
-  const initialMessages: Message[] = [
-    {
-      id: "1",
-      role: "user",
-      content: "How do I retrieve a push token on a device?",
-    },
-    {
-      id: "2",
-      role: "assistant",
-      content: (
-        <>
-          <p className="mb-2">
-            To retrieve a push token on a device using React Native, you typically follow these steps:
-          </p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>
-              <span className="font-bold">Install Required Packages:</span>{" "}
-              {"Ensure you have the Expo SDK or the necessary libraries for push notifications installed, like "}
-              <span className="underline">expo-notifications</span>.
-            </li>
-            <li>
-              <span className="font-bold">Request Permissions:</span>{" "}
-              {"Before retrieving the push token, request the user's permission"}
-            </li>
-          </ol>
-        </>
-      ),
-    },
-  ]
-
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [input, setInput] = useState("")
-  const messagesEndRef = React.useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (input.trim() === "") return
-
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input.trim(),
-    }
-
-    setMessages((prevMessages) => [...prevMessages, newUserMessage])
-    setInput("")
-
-    // Add thinking message
-    const thinkingMessageId = (Date.now() + 1).toString()
-    const thinkingMessage: Message = {
-      id: thinkingMessageId,
-      role: "assistant",
-      content: "Thinking...",
-      isThinking: true,
-    }
-    setMessages((prevMessages) => [...prevMessages, thinkingMessage])
-
-    // Simulate AI response after a delay
-    await new Promise((resolve) => setTimeout(resolve, 2000)) // 2 second delay
-
-    const aiResponseContent = (
-      <>
-        <p className="mb-2">
-          To retrieve a push token on a device using React Native, you typically follow these steps:
-        </p>
-        <ol className="list-decimal list-inside space-y-1">
-          <li>
-            <span className="font-bold">Install Required Packages:</span>{" "}
-            {"Ensure you have the Expo SDK or the necessary libraries for push notifications installed, like "}
-            <span className="underline">expo-notifications</span>.
-          </li>
-          <li>
-            <span className="font-bold">Request Permissions:</span>{" "}
-            {"Before retrieving the push token, request the user's permission"}
-          </li>
-        </ol>
-      </>
-    )
-
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg.id === thinkingMessageId ? { ...msg, content: aiResponseContent, isThinking: false } : msg,
-      ),
-    )
-  }
-
-  return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto    overflow-hidden">
-      {/* Chat messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Date separator */}
-        <div className="relative flex items-center justify-center my-4">
-          <div className="flex-grow border-t border-gray-300" />
-          <span className="mx-4 text-sm text-gray-500">Sunday, Jul 13</span>
-          <div className="flex-grow border-t border-gray-300" />
-        </div>
-        {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`${
-                message.role === "user" ? "bg-[#f0f0ff] dark:bg-xcolor" : "bg-gray-100 text-gray-800 dark:text-white  dark:bg-[#111111]"
-              } rounded-lg p-3 ${message.role === "user" ? "max-w-[75%]" : "max-w-[85%]"} ${message.isThinking ? "animate-pulse" : ""}`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-        {/* <div ref={messagesEndRef} /> Scroll anchor */}
-      </div>
-
-      {/* Input area */}
-      <div className="p-4 border-t flex items-center gap-2">
-        <button className="p-2 text-gray-400 hover:text-gray-600">
-          <Paperclip className="w-5 h-5" />
-        </button>
-        <Input
-          className="flex-1 border rounded px-3 py-2 text-sm"
-          placeholder="Ask a question"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button onClick={handleSendMessage} className="bg-xcolor text-white px-3 py-2 rounded flex items-center justify-center">
-          <Send className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  )
-}
 
 function Notes() {  
   const [title, setTitle] = useState("")
