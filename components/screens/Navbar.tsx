@@ -232,13 +232,13 @@ export default function Navbar() {
               <div className="px-6 py-4 border-t">
                 <div className="flex flex-col space-y-3">
                   <Link 
-                    href="/login" 
+                    href="/auth/sign-in" 
                     className="w-full px-4 py-3 text-center text-sm font-medium text-[#1a2352] border border-[#1a2352] rounded-lg hover:bg-[#1a2352] hover:text-white transition-colors"
                   >
                     Sign in
                   </Link>
                   <Link 
-                    href="/register" 
+                    href="/auth/sign-up" 
                     className="w-full px-4 py-3 text-center text-sm font-medium bg-[#1a2352] text-white rounded-lg hover:bg-[#1a2352]/90 transition-colors"
                   >
                     Create Account
