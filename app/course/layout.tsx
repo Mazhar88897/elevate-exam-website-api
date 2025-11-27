@@ -2,7 +2,7 @@
 import Link from "next/link"
 import React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Home,
@@ -367,7 +367,7 @@ export function Sidebar({ className }: SidebarProps) {
     key: string;
     color?: string;
     items: ServiceItem[];
-  }[] = [
+  }[] = useMemo(() => [
     
         {
       title: "Course Overview",
@@ -398,7 +398,7 @@ export function Sidebar({ className }: SidebarProps) {
           icon: FileQuestion,
           color: "text-green-500",
           subItems: [
-            { label: "Take Quiz", link: "/pages/desktop-exam" },
+            { label: "Take Quiz", link: isMobile ? "/pages/mobile-exam" : "/pages/desktop-exam" },
             { label: "Quiz Analytics", link: "/course/quiz-analytics" },
           ]
 
@@ -413,7 +413,7 @@ export function Sidebar({ className }: SidebarProps) {
         },
       ],
     },
-  ]
+  ], [course_id, isMobile])
   return (
     <>
       {/* Mobile Toggle Button */}
