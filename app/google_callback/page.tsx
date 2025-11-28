@@ -46,7 +46,36 @@ export default function GoogleCallbackPage() {
         console.log('Google Callback Response:', data)
         sessionStorage.setItem('Authorization',`Bearer ${data.access}`)
         sessionStorage.setItem('RefreshToken',`Bearer ${data.refresh}`)
-        router.push('/dashboard/')
+        
+        // Fetch user data after successful authentication
+        try {
+          const userResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `${sessionStorage.getItem('Authorization')}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            
+            // Store user data in sessionStorage
+            sessionStorage.setItem('email', userData.email || '');
+            sessionStorage.setItem('id', userData.id?.toString() || '');
+            sessionStorage.setItem('name', userData.name || '');
+            
+            router.push('/dashboard/');
+          } else {
+            console.warn('Failed to fetch user data, but login was successful');
+            // Still proceed with login even if user data fetch fails
+            router.push('/dashboard/');
+          }
+        } catch (userErr) {
+          console.warn('Error fetching user data:', userErr);
+          // Still proceed with login even if user data fetch fails
+          router.push('/dashboard/');
+        }
       }
     } catch (err) {
       console.error('Error fetching callback:', err)
