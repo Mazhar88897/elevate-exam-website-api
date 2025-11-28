@@ -40,7 +40,7 @@ export const GoogleSignInButton = ({
       // Fetch authorization URL from backend
       // Include credentials to establish session for state validation
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/auth/o/google-oauth2/?redirect_uri=${encodeURIComponent(redirectUrl)}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/auth/o/google-oauth2/?redirect_uri=https://elevate-exam-website-api.vercel.app/google_callback`,
         {
           method: 'GET',
           credentials: 'include', // Include cookies/session data - essential for Django session
