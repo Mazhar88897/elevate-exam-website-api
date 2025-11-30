@@ -187,8 +187,8 @@ export default function Courses() {
                     {/* Links List */}
                     <ul className="mt-2 pl-5 space-y-2">
                       {topic.links.map((link, linkIndex) => (
-                        <li key={linkIndex}>
-                          <Link
+                      <li onClick={() => {sessionStorage.setItem('DomainIdForPayment', topic.id.toString())}} key={linkIndex}>
+                           <Link
                             href={`/main/courses/${link.id}`}
                             className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors group"
                           >
