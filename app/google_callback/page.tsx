@@ -24,6 +24,19 @@ export default function GoogleCallbackPage() {
         return
       }
 
+      // Check if user came from landing page before making API calls
+      const fromLandingPage = sessionStorage.getItem('FromLandingPage') === 'true';
+      const courseIdFromLandingPage = sessionStorage.getItem('CourseIdFromLandingPage') || '';
+
+      // Helper function to redirect based on landing page status
+      const redirectAfterAuth = () => {
+        if (fromLandingPage && courseIdFromLandingPage) {
+          router.push(`/main/courses/${courseIdFromLandingPage}`);
+        } else {
+          router.push('/dashboard/');
+        }
+      };
+
       try {
         // Build the endpoint URL with state and code as query parameters
         // The redirect_uri might also be needed to match the initial OAuth request
@@ -39,46 +52,47 @@ export default function GoogleCallbackPage() {
             'Content-Type': 'application/json',
           },
         })
-        const fromLandingPage =  sessionStorage.getItem('FromLandingPage') === 'true' ? true : false || false;
-        const courseIdFromLandingPage = sessionStorage.getItem('CourseIdFromLandingPage') || '';
+        
         const data = await response.json()
         
-      if (response.ok) {
-        console.log('Google Callback Response:', data)
-        sessionStorage.setItem('Authorization',`Bearer ${data.access}`)
-        sessionStorage.setItem('RefreshToken',`Bearer ${data.refresh}`)
-        
-        // Fetch user data after successful authentication
-        try {
-          const userResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `${sessionStorage.getItem('Authorization')}`,
-              'Content-Type': 'application/json',
-            },
-          });
+        if (response.ok) {
+          console.log('Google Callback Response:', data)
+          sessionStorage.setItem('Authorization',`Bearer ${data.access}`)
+          sessionStorage.setItem('RefreshToken',`Bearer ${data.refresh}`)
+          
+          // Fetch user data after successful authentication
+          try {
+            const userResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/users/me/`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `${sessionStorage.getItem('Authorization')}`,
+                'Content-Type': 'application/json',
+              },
+            });
 
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            
-            // Store user data in sessionStorage
-            sessionStorage.setItem('email', userData.email || '');
-            sessionStorage.setItem('id', userData.id?.toString() || '');
-            sessionStorage.setItem('name', userData.name || '');
-            
-            if (fromLandingPage) {
-            router.push(`/main/courses//${courseIdFromLandingPage}`);
-          } else {
-           
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              
+              // Store user data in sessionStorage
+              sessionStorage.setItem('email', userData.email || '');
+              sessionStorage.setItem('id', userData.id?.toString() || '');
+              sessionStorage.setItem('name', userData.name || '');
+              
+              redirectAfterAuth();
+            } else {
+              console.warn('Failed to fetch user data, but login was successful');
+              // Still proceed with login even if user data fetch fails
+              redirectAfterAuth();
+            }
+          } catch (userErr) {
+            console.warn('Error fetching user data:', userErr);
             // Still proceed with login even if user data fetch fails
-            router.push('/dashboard/');
+            redirectAfterAuth();
           }
-        } catch (userErr) {
-          console.warn('Error fetching user data:', userErr);
-          // Still proceed with login even if user data fetch fails
-          router.push('/dashboard/');
+        } else {
+          console.error('OAuth authentication failed:', data);
+          router.push('/auth/sign-in');
         }
-      }
     } catch (err) {
       console.error('Error fetching callback:', err)
       router.push('/auth/sign-in')
