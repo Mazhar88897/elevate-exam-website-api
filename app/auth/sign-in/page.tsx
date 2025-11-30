@@ -85,7 +85,7 @@ const Page = () => {
           sessionStorage.setItem('id', userData.id?.toString() || '');
           sessionStorage.setItem('name', userData.name || '');
           // sessionStorage.setItem('UserData', JSON.stringify(userData));
-          
+          sessionStorage.setItem('FromLandingPage', 'false');
           router.push('/dashboard/');
         } else {
           console.warn('Failed to fetch user data, but login was successful');

@@ -39,7 +39,8 @@ export default function GoogleCallbackPage() {
             'Content-Type': 'application/json',
           },
         })
-
+        const fromLandingPage =  sessionStorage.getItem('FromLandingPage') === 'true' ? true : false || false;
+        const courseIdFromLandingPage = sessionStorage.getItem('CourseIdFromLandingPage') || '';
         const data = await response.json()
         
       if (response.ok) {
@@ -65,9 +66,10 @@ export default function GoogleCallbackPage() {
             sessionStorage.setItem('id', userData.id?.toString() || '');
             sessionStorage.setItem('name', userData.name || '');
             
-            router.push('/dashboard/');
+            if (fromLandingPage) {
+            router.push(`/main/courses//${courseIdFromLandingPage}`);
           } else {
-            console.warn('Failed to fetch user data, but login was successful');
+           
             // Still proceed with login even if user data fetch fails
             router.push('/dashboard/');
           }

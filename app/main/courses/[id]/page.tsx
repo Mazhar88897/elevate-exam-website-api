@@ -205,7 +205,10 @@ export default function CourseLandingPage() {
                 
                 </div>
               </div>
-             <CustomButton onClick={() => setIsModalOpen(true)}><p className="text-sm font-semibold">Try Now!</p></CustomButton>
+             <CustomButton onClick={() =>  {setIsModalOpen(true);
+                                            sessionStorage.setItem('FromLandingPage','true');
+                                            sessionStorage.setItem('CourseIdFromLandingPage', courseId as string);
+             }}><p className="text-sm font-semibold">Try Now!</p></CustomButton>
             </div>
           </CardContent>
           </HoverCard>
