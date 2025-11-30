@@ -31,6 +31,7 @@ const Page = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    sessionStorage.clear();
     setError('');
     setIsLoading(true);
 
@@ -221,7 +222,10 @@ const Page = () => {
                 </div>
 
                 {/* Sign In with Google Button */}
-               <GoogleSignInButton />
+                <div onClick={() => {sessionStorage.clear();}}>
+                <GoogleSignInButton />
+                </div>
+      
                 
             
             </form>
