@@ -31,8 +31,11 @@ export default function GoogleCallbackPage() {
       // Helper function to redirect based on landing page status
       const redirectAfterAuth = () => {
         if (fromLandingPage && courseIdFromLandingPage) {
+          sessionStorage.setItem('purchaseModalOpen', "true");
           router.push(`/main/courses/${courseIdFromLandingPage}`);
+          
         } else {
+          sessionStorage.setItem('purchaseModalOpen', "false");
           router.push('/dashboard/');
         }
       };

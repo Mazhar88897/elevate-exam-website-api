@@ -92,6 +92,14 @@ export default function CourseLandingPage() {
     }
   }, [courseId])
 
+  // Check sessionStorage for purchaseModalOpen on mount and refresh
+  useEffect(() => {
+    const purchaseModalOpen = sessionStorage.getItem('purchaseModalOpen')
+    if (purchaseModalOpen === 'true') {
+      setIsModalOpen(true)
+    }
+  }, [])
+
   useEffect(() => {
     // Set a small delay to ensure the component is rendered before animation starts
     const timer = setTimeout(() => {
@@ -153,9 +161,17 @@ export default function CourseLandingPage() {
     )
   }
 
+  const handleModalOpenChange = (open: boolean) => {
+    setIsModalOpen(open)
+    if (!open) {
+      // Clear the sessionStorage when modal is closed so it doesn't reopen on refresh
+      sessionStorage.setItem('purchaseModalOpen', 'false')
+    }
+  }
+
   return (
     <>
-      <PurchaseModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <PurchaseModal open={isModalOpen} onOpenChange={handleModalOpenChange} />
       <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="flex  flex-col-reverse   lg:flex-row gap-8">
         {/* Left side - Course card */}
@@ -208,6 +224,7 @@ export default function CourseLandingPage() {
              <CustomButton onClick={() =>  {setIsModalOpen(true);
                                             sessionStorage.setItem('FromLandingPage','true');
                                             sessionStorage.setItem('CourseIdFromLandingPage', courseId as string);
+                                            sessionStorage.setItem('purchaseModalOpen', "true");
              }}><p className="text-sm font-semibold">Try Now!</p></CustomButton>
             </div>
           </CardContent>
