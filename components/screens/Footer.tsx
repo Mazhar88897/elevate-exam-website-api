@@ -152,7 +152,7 @@ function NewsletterForm() {
       reset()
     } catch (error) {
       console.error('Error subscribing to newsletter:', error)
-      toast.error('Failed to subscribe. Please try again.')
+      toast.success('Newsletter Already Subscribed.')
     } finally {
       setIsSubmitting(false)
     }
