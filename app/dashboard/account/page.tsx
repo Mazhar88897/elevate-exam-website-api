@@ -136,6 +136,7 @@ export default function AccountPage() {
           const data = await response.json()
           console.log('API Response Data:', data)
           setUserData(data)
+          sessionStorage.setItem('name', data.name)
           // Initialize form data with fetched user data
           setFormData({
             name: data.name || '',
