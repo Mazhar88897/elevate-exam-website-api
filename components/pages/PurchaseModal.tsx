@@ -25,6 +25,16 @@ interface Domain {
   name: string
 }
 
+interface SubscriptionStatus {
+  status: string
+  is_active: boolean
+  domain_id: number
+  plan_interval: string
+  cancel_at_period_end: boolean
+  current_period_start: string
+  current_period_end: string
+}
+
 interface PurchaseModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -64,6 +74,8 @@ export function PurchaseModal({ open, onOpenChange }: PurchaseModalProps) {
   const [domains, setDomains] = useState<Domain[]>([])
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null)
   const [loadingDomains, setLoadingDomains] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null)
+  const [loadingSubscription, setLoadingSubscription] = useState(false)
 
   // Plan state
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annually" | null>(null)
@@ -299,7 +311,40 @@ export function PurchaseModal({ open, onOpenChange }: PurchaseModalProps) {
       }
     }
 
+    const fetchSubscriptionStatus = async () => {
+      setLoadingSubscription(true)
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/${domainId}/status/`,
+          {
+            headers: {
+              Authorization: token,
+            },
+          },
+        )
+
+        if (!response.ok) {
+          // If no subscription exists, treat as not subscribed
+          if (response.status === 404) {
+            setSubscriptionStatus(null)
+            return
+          }
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.detail || "Unable to load subscription status")
+        }
+
+        const data = await response.json()
+        setSubscriptionStatus(data)
+      } catch (error) {
+        console.error("Error fetching subscription status:", error)
+        // Don't block UI; just behave as if not subscribed
+      } finally {
+        setLoadingSubscription(false)
+      }
+    }
+
     fetchCourses()
+    fetchSubscriptionStatus()
 
     return () => controller.abort()
   }, [activeTab])
@@ -621,36 +666,56 @@ export function PurchaseModal({ open, onOpenChange }: PurchaseModalProps) {
 
                 {/* Domain Tab */}
                 <TabsContent value="domain" className="mt-0 flex flex-col h-full">
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <h3 className="text-lg font-semibold mb-4">All Courses</h3>
-                    {loadingDomains ? (
-                      <div className="flex min-h-[280px] justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      </div>
-                    ) : (
-                      <div className="min-h-[280px] overflow-y-auto pr-2">
-                        <div className="flex flex-col">
-                          {domains.map((domain) => (
-                            <div
-                              key={domain.id}
-                              className="flex flex-row items-center gap-3 rounded-lg py-2"
-                            >
-                              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-                              <p className="font-medium text-sm">{domain.name}</p>
-                            </div>
-                          ))}
+                  {loadingDomains || loadingSubscription ? (
+                    <div className="flex-1 flex justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : subscriptionStatus?.is_active ? (
+                    <div className="flex-1 flex flex-col justify-center text-sm text-gray-700">
+                      <h3 className="text-lg font-semibold mb-2">Subscription Active</h3>
+                      <p className="font-semibold text-green-700 mb-2">
+                        You are already subscribed to this Industry.
+                      </p>
+                      <p className="mb-1">
+                        <span className="font-medium">Status:</span> {subscriptionStatus.status}
+                      </p>
+                      <p className="mb-1">
+                        <span className="font-medium">Plan:</span> {subscriptionStatus.plan_interval}
+                      </p>
+                      <p className="mb-1">
+                        <span className="font-medium">Current period:</span>{" "}
+                        {new Date(subscriptionStatus.current_period_start).toLocaleDateString()} -{" "}
+                        {new Date(subscriptionStatus.current_period_end).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 flex flex-col min-h-0">
+                        <h3 className="text-lg font-semibold mb-4">All Courses</h3>
+                        <div className="min-h-[280px] overflow-y-auto pr-2">
+                          <div className="flex flex-col">
+                            {domains.map((domain) => (
+                              <div
+                                key={domain.id}
+                                className="flex flex-row items-center gap-3 rounded-lg py-2"
+                              >
+                                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <p className="font-medium text-sm">{domain.name}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="pt-4 border-t border-gray-200 mt-4">
-                    <Button
-                      onClick={handleProceedToPayment}
-                      className="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 rounded-mid"
-                    >
-                      Proceed with Payment
-                    </Button>
-                  </div>
+                      <div className="pt-4 border-t border-gray-200 mt-4">
+                        <Button
+                          onClick={handleProceedToPayment}
+                          className="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 rounded-mid"
+                        >
+                          Proceed with Payment
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 {/* Plan Tab */}
