@@ -315,8 +315,8 @@ function QuizPage() {
     try {
       if (typeof window === 'undefined') return null
       
-      const courseId = sessionStorage.getItem('course_id')
-      const authToken = sessionStorage.getItem('Authorization')
+      const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+      const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
       if (!courseId || !authToken) return null
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/question_page/`, {
@@ -379,8 +379,8 @@ function QuizPage() {
     try {
       if (typeof window === 'undefined') return
       
-      const courseId = sessionStorage.getItem('course_id')
-      const authToken = sessionStorage.getItem('Authorization')
+      const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+      const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
       if (!courseId || !authToken) return
       
       console.log('=== FETCHING PROGRESS ===')
@@ -652,7 +652,7 @@ function QuizPage() {
   const submitHandler = async (questionId: number, selectedOption: number | null, isFlagged: boolean) => {
     if (typeof window === 'undefined') return
     
-    const authToken = sessionStorage.getItem('Authorization')
+    const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
     if (!authToken) return
     
     setIsQuestionSubmitting(true)
@@ -984,8 +984,8 @@ function QuizPage() {
   const  handleSubmitQuiz = async () => {
     if (typeof window === 'undefined') return
    
-    const courseId = sessionStorage.getItem('course_id')
-    const authToken = sessionStorage.getItem('Authorization')
+    const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+    const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
     if (!courseId || !authToken) return
    
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/submit/`, {
@@ -1007,8 +1007,8 @@ function QuizPage() {
   const handleQuitQuiz = async () => {
     if (typeof window === 'undefined') return
     
-    const courseId = sessionStorage.getItem('course_id')
-    const authToken = sessionStorage.getItem('Authorization')
+    const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+    const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
     if (!courseId || !authToken) return
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/quiz_progress/${courseId}/quit/`, {
@@ -1056,7 +1056,7 @@ function QuizPage() {
             onClick={() => setActiveTab("ai")}
             className={cn(
               "flex flex-col items-center justify-center flex-1 h-full transition-colors",
-              activeTab === "ai" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+              activeTab === "ai" ? "text-xcolor border-b-2 border-xcolor" : "text-gray-500 dark:text-gray-400"
             )}
           >
               <span className="text-xs font-semibold">AI</span>
@@ -1066,7 +1066,7 @@ function QuizPage() {
             onClick={() => setActiveTab("note")}
             className={cn(
               "flex flex-col items-center justify-center flex-1 h-full transition-colors",
-              activeTab === "note" ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"
+              activeTab === "note" ? "text-xcolor border-b-2 border-xcolor" : "text-gray-500 dark:text-gray-400"
             )}
           >
                <span className="text-xs font-semibold">Note</span>
@@ -1233,13 +1233,12 @@ function Notes() {
     
     if (typeof window === 'undefined') return
     
-    // Validate fields
     if (!title.trim() || !content.trim()) {
       toast.error("Please fill these fields first")
       return
     }
     
-    const authToken = sessionStorage.getItem('Authorization')
+    const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
     if (!authToken) return
     
     setSubmitLoading(true)

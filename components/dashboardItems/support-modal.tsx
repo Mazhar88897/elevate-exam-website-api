@@ -58,13 +58,13 @@ export const useSupportModal = () => {
 export const SupportModal = () => {
   const { isOpen, closeModal } = useContext(SupportModalContext)!
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    name:   sessionStorage.getItem('name') || "",
-    email: sessionStorage.getItem('email') || "",
+  const [formData, setFormData] = useState(() => ({
+    name: typeof window !== "undefined" ? sessionStorage.getItem("name") || "" : "",
+    email: typeof window !== "undefined" ? sessionStorage.getItem("email") || "" : "",
     subject: "",
     message: "",
     topic: "technical",
-  })
+  }))
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target
@@ -94,9 +94,8 @@ export const SupportModal = () => {
       toast.success("Message sent successfully! Our support team will get back to you within 24 hours.")
 
       setFormData({
-        name: sessionStorage.getItem('name') || "",
-        email: sessionStorage.getItem('email') || "",
-        
+        name: typeof window !== "undefined" ? sessionStorage.getItem("name") || "" : "",
+        email: typeof window !== "undefined" ? sessionStorage.getItem("email") || "" : "",
         subject: "",
         message: "",
         topic: "technical",

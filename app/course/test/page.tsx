@@ -112,9 +112,12 @@ function QuizPage() {
   // Fetch questions from API 1
   const fetchQuestions = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${sessionStorage.getItem('course_id')}/full_test_page/`, {
+      const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}/full_test_page/`, {
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${token}`
         }
       })
       
@@ -153,11 +156,12 @@ function QuizPage() {
     };
 
     try {
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/update_question/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `${sessionStorage.getItem('Authorization')}`
+          "Authorization": `${token}`
         },
         body: JSON.stringify(payload),
       });
@@ -176,9 +180,12 @@ function QuizPage() {
   // Fetch progress from API 2
   const fetchProgress = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/progress/?source=content`, {
+      const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${courseId}/progress/?source=content`, {
         headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`
+          'Authorization': `${token}`
         }
       })
       
@@ -305,7 +312,7 @@ function QuizPage() {
 
   // Handle cancel - redirect to course page
   const handleCancel = () => {
-    const course_id = sessionStorage.getItem('course_id')
+    const course_id = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
     if (course_id) {
       router.push(`/course/${course_id}`)
     }
@@ -445,12 +452,12 @@ function QuizPage() {
   // Confirm quit quiz
   const confirmQuitQuiz = async () => {
     setShowQuitModal(false)
-    const course_id = sessionStorage.getItem('course_id')
+    const course_id = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
    
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${course_id}/quit/`, {
       method: "POST",
       headers: {
-        "Authorization": `${sessionStorage.getItem('Authorization')}`
+        "Authorization": `${typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : ''}`
       }
     })
     if (response.ok){
@@ -475,10 +482,13 @@ function QuizPage() {
   const confirmSubmitQuiz = async () => {
     setShowSubmitModal(false)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${sessionStorage.getItem('course_id')}/submit/`, {
+      const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/test_progress/${courseId}/submit/`, {
         method: "POST",
         headers: {
-          "Authorization": `${sessionStorage.getItem('Authorization')}`
+          "Authorization": `${token}`
         }
       })
       if (response.ok){
@@ -619,7 +629,10 @@ function QuizPage() {
               {progressData && progressData.attempted_questions > 0 ? 'Continue Test' : 'Start Test'}
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              You are now going to {progressData && progressData.attempted_questions > 0 ? 'continue' : 'start'} the full test of all the topics and subtopics of the course: <span className="font-semibold text-gray-900 dark:text-white">{sessionStorage.getItem('course_name') || 'the course'}</span>
+              You are now going to {progressData && progressData.attempted_questions > 0 ? 'continue' : 'start'} the full test of all the topics and subtopics of the course:{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || 'the course' : 'the course'}
+              </span>
             </p>
             <div className="flex gap-3 justify-between items-center">
               <button
@@ -648,7 +661,9 @@ function QuizPage() {
         <div className="max-w-5xl mx-auto w-full text-center">
           {/* <Progress value={getQuestionNumber()} className="h-1.5 bg-gray-200 rounded-mid" /> */}
        
-          <p className="sm:text-2xl text-xl font-bold pb-4"> {sessionStorage.getItem('course_name')}</p>
+          <p className="sm:text-2xl text-xl font-bold pb-4">
+            {typeof window !== 'undefined' ? sessionStorage.getItem('course_name') || '' : ''}
+          </p>
         </div>
 
         {/* Question content */}

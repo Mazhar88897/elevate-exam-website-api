@@ -181,8 +181,8 @@ export default function QuizResultsPage() {
         
         if (typeof window === 'undefined') return
         
-        const courseId = sessionStorage.getItem('course_id')
-        const token = sessionStorage.getItem('Authorization')
+        const courseId = typeof window !== 'undefined' ? sessionStorage.getItem('course_id') : null
+        const token = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null
         
         if (!courseId) {
           throw new Error('No course ID found in session')
