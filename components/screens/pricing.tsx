@@ -1,4 +1,5 @@
 import { Check } from "lucide-react"
+import Link from "next/link"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { CustomButton } from "@/components/pages/CustomButton"
 import { Highlight } from "@/components/pages/Highlight"
@@ -6,44 +7,30 @@ import { HoverCard } from "../pages/HoverCard"
 export default function PricingPlans() {
   const plans = [
     {
-      name: "Basic",
-      price: "$23",
+      name: "Monthly",
+      price: "$5.99",
       features: [
-        "Exam-style Quiz Questions",
-        "Practice Exams",
-        "AI Assistant",
-        "Flashcards",
-        "Performance Analytics",
-        "Notes",
+        "Access to all courses",
+        "Access to all quizzes",
+        "Access to all practice exams",
+        "Access to all flashcards",
+        "Access to all notes",
       ],
       highlighted: false,
     },
     {
-      name: "Expert",
+      name: "Annual (save ~30%)",
       price: "$42",
       features: [
-        "Exam-style Quiz Questions",
-        "Practice Exams",
-        "AI Assistant",
-        "Flashcards",
-        "Performance Analytics",
-        "Notes",
+        "Access to all courses",
+        "Access to all quizzes",
+        "Access to all practice exams",
+        "Access to all flashcards",
+        "Access to all notes",
       ],
       highlighted: true,
     },
-    {
-      name: "Advance",
-      price: "$63",
-      features: [
-        "Exam-style Quiz Questions",
-        "Practice Exams",
-        "AI Assistant",
-        "Flashcards",
-        "Performance Analytics",
-        "Notes",
-      ],
-      highlighted: false,
-    },
+   
   ]
 
   return (
@@ -52,7 +39,7 @@ export default function PricingPlans() {
         Choose Your <Highlight>Best Plan</Highlight>
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
         {plans.map((plan, index) => (
             <HoverCard key={index}>
           <div  className="relative">
@@ -62,7 +49,7 @@ export default function PricingPlans() {
                 <h3 className="text-lg font-medium">{plan.name}</h3>
                 <div className="mt-2">
                   <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-sm text-blue-600">/Course</span>
+                  <span className="text-sm text-blue-600">/Industry</span>
                 </div>
               </CardHeader>
               <CardContent className="pt-6 flex-grow">
@@ -76,7 +63,9 @@ export default function PricingPlans() {
                 </ul>
               </CardContent>
               <CardFooter className="flex flex-col pt-0">
-                <CustomButton className="w-full "><p className="text-sm font-semibold">Purchase Now</p></CustomButton>
+                <Link href="/main/courses">
+                <CustomButton className="w-full "><p className="text-sm font-semibold">Explore Now</p></CustomButton>
+                </Link>
                 <p className="text-xs text-muted-foreground mt-4 text-center">* Tax & other services included.</p>
               </CardFooter>
             </Card>

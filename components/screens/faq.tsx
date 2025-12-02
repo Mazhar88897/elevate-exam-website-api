@@ -50,7 +50,7 @@ export default function Faq() {
   <div className="max-w-6xl w-full flex flex-wrap gap-8">
     {/* Left Column - Video Section */}
     <div className="flex-1 min-w-[300px] space-y-4">
-      <h2 className="text-3xl font-semibold text-slate-700 mb-8">We Also Provide Online Programming Videos</h2>
+      <h2 className="text-3xl font-semibold text-slate-700 mb-8"></h2>
 
       <div className="space-y-1">
         {/* Accordion Topics */}
@@ -83,7 +83,7 @@ export default function Faq() {
 
     {/* Right Column - Topics List */}
     <div className="flex-1 min-w-[300px] space-y-4">
-      <h2 className="text-3xl font-semibold text-slate-700 mb-8">We Also Provide Online Programming Videos</h2>
+      <h2 className="text-3xl font-semibold text-white mb-8"></h2>
 
       <div className="space-y-1">
         {/* Accordion Topics */}
