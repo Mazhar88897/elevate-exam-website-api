@@ -30,9 +30,7 @@ export default function Home() {
   return (
     <main className="">
       <div className="sticky top-0 z-50"><Navbar /></div>
-     
-      <Hero />
-      <div className="  lg:-translate-y-[150px]   w-full  justify-center items-center">
+      <div className="mt-10 lg:mt-44  lg:-translate-y-[150px]   w-full  justify-center items-center">
       
       {animationData && (
         <Lottie
@@ -44,6 +42,8 @@ export default function Home() {
       )}
                             
       </div>
+      <Hero />
+     
       
       
 

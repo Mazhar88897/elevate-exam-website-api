@@ -32,7 +32,7 @@ import { Highlight } from "@/components/pages/Highlight"
 
 const hero = () => {
   return (
-    <div className="w-full  h-[90vh] flex items-center justify-start p-8 bg-white lg:bg-[#FDFBFB]">
+    <div className="w-full h-full  lg:h-[90vh] flex items-center justify-start p-8 bg-white lg:bg-[#FDFBFB]">
       <div className="max-w-6xl mx-auto w-full">
         <div className="flex flex-col items-start text-left space-y-8">
           {/* Main heading */}
