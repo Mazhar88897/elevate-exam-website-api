@@ -14,30 +14,38 @@ import Owner from "@/components/screens/owner"
 import Courses from "@/components/screens/courses"
 import CoursesHeading from "@/components/screens/coursesHeading"
 import Image from "next/image"
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Lottie from 'lottie-react';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    fetch('/elevateExams.json')
+      .then(response => response.json())
+      .then(data => setAnimationData(data))
+      .catch(error => console.error('Error loading animation:', error));
+  }, []);
+
   return (
     <main className="">
       <div className="sticky top-0 z-50"><Navbar /></div>
      
       <Hero />
-      <div className=" hidden lg:block  lg:-translate-y-[150px]   w-full  justify-center items-center">
+      <div className="  lg:-translate-y-[150px]   w-full  justify-center items-center">
       
-      <DotLottieReact
-      src="/animation.lottie"
-      className="h-[500px] "
-      loop
-      autoplay
-    />
+      {animationData && (
+        <Lottie
+          animationData={animationData}
+          className="h-[500px] "
+          loop={true}
+          autoplay={true}
+        />
+      )}
                             
       </div>
       
-      <div className=" flex lg:hidden h-[50vh]  lg:-translate-y-[150px]   w-full  justify-center items-center">
       
-      <h1 className="text-4xl">Animation</h1>
-                            
-      </div>
 
 
 
