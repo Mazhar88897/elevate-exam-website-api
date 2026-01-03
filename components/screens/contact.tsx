@@ -74,8 +74,8 @@ export default function Contact() {
         <div className="flex-1">
           <h2 className="text-lg font-semibold text-black mb-3">Leave A Message</h2>
           <p className="text-slate-500 text-sm mb-6">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eius tempor incididunt ut labore etdolore.
-          </p>
+          Have a question or need help? Leave us a message and we’ll get back to you as soon as possible.
+   </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -150,8 +150,7 @@ export default function Contact() {
             Get In <Highlight>Touch</Highlight>
           </h2>
           <p className="text-slate-500 text-sm mb-8">
-            Lorem ipsum dolor sit amet consectetuer adipiscing elit. Aenean amet commodo ligula eget dolor sit amet
-            consectetuer ipsum.
+          Get in touch with us—we’re happy to help and answer any questions you may have. 
           </p>
 
           <div className="space-y-4">
@@ -164,11 +163,11 @@ export default function Contact() {
               
               <div>
                 <h3 className="text-md font-medium text-slate-800">Location</h3>
-                <p className="text-slate-500 text-sm">Tukad Yeh Aya No.19, Bali</p>
+                <p className="text-slate-500 text-sm">Virtual location</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
+            {/* <div className="flex items-start gap-4">
             <HoverCard>
             <div className="flex items-center justify-center w-9 h-9 border border-slate-200 rounded">
                 <Phone className="w-4 h-4 text-slate-700" />
@@ -179,7 +178,7 @@ export default function Contact() {
                 <h3 className="text-md font-medium text-slate-800">Phone</h3>
                 <p className="text-slate-500  text-sm">(+61) 8896-2220</p>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-start gap-4">
                 <HoverCard>
@@ -190,11 +189,11 @@ export default function Contact() {
               
               <div>
                 <h3 className="text-md font-medium text-slate-800">Email</h3>
-                <p className="text-slate-500  text-sm">encode@support.com</p>
+                <p className="text-slate-500  text-sm">info@elvateexams.com</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
+            {/* <div className="flex items-start gap-4">
                 <HoverCard>
                 <div className="flex items-center justify-center w-9 h-9 border border-slate-200 rounded">
                 <Clock className="w-4 h-4 text-slate-700" />
@@ -205,7 +204,7 @@ export default function Contact() {
                 <h3 className="text-md font-medium text-slate-800">Opening Hours</h3>
                 <p className="text-slate-500  text-sm">Everyday 09 AM - 07 PM</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="mt-8 pt-3 border-t border-slate-800">

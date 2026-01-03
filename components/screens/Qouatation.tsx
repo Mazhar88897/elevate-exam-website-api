@@ -11,15 +11,19 @@ export default function Qouatation() {
           <span className="text-7xl font-serif absolute top-8 left-8 text-white">“</span>
           <div className="mt-8 mb-16 relative z-10">
             <p className="text-2xl font-light leading-relaxed">
-              Programmers are mostly &quot; learn by doing &quot; types. No amount of academic study or watching other people code
-              can compare to breaking open an editor and start making mistakes.
+           This platform completely changed how I revise. The exam-style 
+questions feel just like the real thing, and the practice exams helped me walk 
+into my test with confidence.
+
             </p>
           </div>
           <div className="mt-8">
-            <p className="font-semibold text-md ">Dennis Ritchie</p>
-            <p className="text-sm font-semibold  text-gray-400">Encode Learner</p>
+            <p className="font-semibold text-md ">  Emily R.</p>
+            {/* <p className="text-sm font-semibold  text-gray-400">Encode Learner</p> */}
           </div>
         </div>
+
+
 
         {/* Right Column - Testimonials */}
         <div className="space-y-8">
@@ -29,8 +33,9 @@ export default function Qouatation() {
             {/* Testimonial Card 1 */}
             <HoverCard className="p-6">
               <p className="text-gray-600 mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor inci dunt ut labore et
-                dolore magna eiusmod.
+              I love how everything is in one place. Quizzes, flashcards, and 
+clear progress stats. The AI Assistant explanations are especially helpful when I 
+get stuck
               </p>
 
               <div className="flex mb-4">
@@ -44,8 +49,8 @@ export default function Qouatation() {
               <div className="flex items-center">
                 
                 <div>
-                  <p className="font-medium">John Doe</p>
-                  <p className="text-sm text-gray-500">Client</p>
+                  <p className="font-medium"> James L.</p>
+                  {/* <p className="text-sm text-gray-500">Client</p> */}
                 </div>
               </div>
             </HoverCard>
@@ -53,8 +58,9 @@ export default function Qouatation() {
             {/* Testimonial Card 2 */}
             <HoverCard className="p-6">
               <p className="text-slate-700 font-medium teext-sm mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor inci dunt ut labore et
-                dolore magna eiusmod.
+              The quiz questions are great for testing what I actually know, and 
+the flashcards make quick revision so easy. Using both together has really 
+helped everything stick.
               </p>
 
               <div className="flex mb-4">
@@ -71,15 +77,15 @@ export default function Qouatation() {
               <div className="flex items-center">
                 
                 <div>
-                  <p className="font-bold text-sm">Andrira Hens</p>
-                  <p className="text-sm text-slate-600">Client</p>
+                  <p className="font-bold text-sm">Sophie M.</p>
+                  {/* <p className="text-sm text-slate-600">Client</p> */}
                 </div>
               </div>
             </HoverCard>
           </div>
 
           <div className="mt-8">
-            <CustomButton>try It!</CustomButton>
+            <CustomButton>Try It!</CustomButton>
           </div>
         </div>
       </div>

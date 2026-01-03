@@ -8,36 +8,37 @@ export default function ProgrammingCourse() {
   const [openAccordions, setOpenAccordions] = useState<number[]>([0]) // First one open by default
 
   // Topics data with descriptions
+ 
   const topics = [
     {
       title: "Exam-style Quiz Questions",
       description:
-        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "Sharpen your knowledge with exam-focused quizzes designed to mirror the format, difficulty, and timing of actual test papers. Each question is crafted to reinforce key concepts, highlight common pitfalls, and build the confidence you need to excel on exam day.",
     },
     {
       title: "Practice Exams",
       description:
-        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "Simulate the full test experience with timed, exam-length practice papers. Get a true measure of your readiness and identify exactly where to focus before the real exam.",
     },
     {
       title: "AI Assistant",
       description:
-        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "Get instant, intelligent support as you study. Our AI Assistant explains answers, breaks down tough concepts, and guides your revision with personalised suggestions.",
     },
     {
       title: "Flashcards",
       description:
-        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "Master key facts and formulas with smart, easy-to-review flashcards. Perfect for quick study sessions and long-term retention.",
     },
     {
       title: "Performance Analytics",
       description:
-        "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit.",
+        "Track your progress with clear, insightful performance stats. See your strengths, spot weaknesses, and watch your improvement over time.",
     },
     {
       title: "Notes",
       description:
-       "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa cum sociis natoque penatibus consectetuer adipiscing elit."    },
+       "Discover the platform in a simple, step-by-step walkthrough that guides you through every feature. Learn how to navigate quizzes, practice exams, flashcards, and progress stats with ease."    },
   ]
 
   // Toggle accordion open/close
@@ -74,11 +75,7 @@ export default function ProgrammingCourse() {
         ></iframe>
       </div>
 
-      <div className="flex gap-2 text-blue-500">
-        <span className="text-xs font-bold">#programming</span>
-        <span className="text-xs font-bold">#course</span>
-        <span className="text-xs font-bold">#logic</span>
-      </div>
+      
 
       <h2 className="text-lg font-bold text-slate-700">How it Works</h2>
 

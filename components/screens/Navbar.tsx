@@ -17,35 +17,38 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { title: "Exam Prep", href: "/main/courses" },
+   { title: "Pricing", href: "/main/pricing" },
+   { title: "How It Works", href: "/main/platform" }, 
+   { title: "Contact Us", href: "/main/contact" },
 
-
-  {
-    title: "Exams",
-    hasDropdown: true,
-    submenu: [
-      { title: "Exams", href: "/main/courses" },
-    ],
-  },
-  { title: "How It Works", href: "/main/platform" },
-  {
-    title: "Pages",
-    hasDropdown: true,
-    submenu: [
-      { title: "About Us", href: "/main/about" },
-      { title: "Contact Us", href: "/main/contact" },
-      { title: "FAQ", href: "/main/faq" },
-      {title: "pricing", href: "/main/pricing" },
-    ],
-  },
-  {
-    title: "Blog",
-    hasDropdown: true,
-    submenu: [
-      { title: "Blog Grid", href: "/main/blogs" },
+  // {
+  //   title: "Exams",
+  //   hasDropdown: true,
+  //   submenu: [
+  //     { title: "Exams", href: "/main/courses" },
+  //   ],
+  // },
+  // { title: "How It Works", href: "/main/platform" },
+  // {
+  //   title: "Pages",
+  //   hasDropdown: true,
+  //   submenu: [
+  //     { title: "About Us", href: "/main/about" },
+  //     { title: "Contact Us", href: "/main/contact" },
+  //     { title: "FAQ", href: "/main/faq" },
+  //     {title: "pricing", href: "/main/pricing" },
+  //   ],
+  // },
+  // {
+  //   title: "Blog",
+  //   hasDropdown: true,
+  //   submenu: [
+  //     { title: "Blog Grid", href: "/main/blogs" },
      
-    ],
-  },
-  { title: "Contact", href: "/main/contact" },
+  //   ],
+  // },
+  // { title: "Contact", href: "/main/contact" },
 ]
 
 export default function Navbar() {

@@ -193,33 +193,32 @@ function NewsletterForm() {
 // Data for footer links
 const languagesLinks = [
   
-  { label: "IT & Cybersecurity", href: "/" },
+  { label: "IT & Cybersecurity", href: "/main/courses" },
   { label: "Project Management", href: "/" },
-  { label: "Finance", href: "/" },
-  { label: "Risk", href: "/" },
-  { label: "Data Protection", href: "/" },
-  { label: "Citizenship", href: "/" },
-  { label: "Marketing", href: "/" },
-  { label: "HR", href: "/" },
+  { label: "Finance", href: "/main/courses" },
+  { label: "Risk", href: "/main/courses" },
+  { label: "Data Protection", href: "/main/courses" },
+  { label: "Citizenship", href: "/main/courses" },
+  { label: "Marketing", href: "/main/courses" },
+  { label: "HR", href: "/main/courses" },
  
 ]
 
-const programsLinks = [
-  { label: "Data Engineer", href: "/programs/data-engineer" },
-  { label: "Data Analyst", href: "/programs/data-analyst" },
-  { label: "Deep Learning", href: "/programs/deep-learning" },
-  { label: "Artificial Intelligence", href: "/programs/ai" },
-  { label: "Digital Marketing", href: "/programs/digital-marketing" },
-  { label: "Robotics Software Engineer", href: "/programs/robotics" },
-  { label: "Cloud Computing", href: "/programs/cloud-computing" },
-  { label: "Cybersecurity", href: "/programs/cybersecurity" },
+
+const aboutLinks = [
+  { label: "About Us", href: "/main/about" },
+  { label: "How It Works", href: "/main/platform" },
+
+
+
 ]
 
 const supportLinks = [
-  { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms & Conditions", href: "/terms" },
- 
-  { label: "FAQ", href: "/faq" },
+  { label: "FAQs", href: "/main/faq" },
+  { label: "Privacy Policy", href: "/main/privacy-policy" },
+  { label: "Terms & Conditions", href: "/main/terms" },
+  { label: "Pricing", href: "/main/pricing" },
+  { label: "Contact Us", href: "/main/contact" },
 ]
 
 // Main Footer Component
@@ -232,8 +231,7 @@ export default function Footer() {
           <div>
             <h2 className="text-2xl font-bold text-white mb-3">Join Our Newsletter</h2>
             <p className="text-gray-400 max-w-md">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-              dolore.
+            Join our newsletter for updates, tips, and the latest news.
             </p>
           </div>
           <div className="flex sm:justify-start lg:justify-end w-full ">
@@ -244,20 +242,20 @@ export default function Footer() {
         <hr className="border-gray-800 my-12" />
 
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="space-y-4">
             <Logo />
             <p className="text-gray-400 mt-4">
-              Lorem ipsum dolor sit amet, consectet adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-              dolore.
+            Join our community and follow us on social media.
             </p>
             <SocialIcons />
           </div>
 
           {/* Links Sections */}
-          <FooterLinks title="LanguagExam Categorieses" links={languagesLinks} />
+          <FooterLinks title="Exam Prep Categorieses" links={languagesLinks} />
           {/* <FooterLinks title="Featured Programs" links={programsLinks} /> */}
+          <FooterLinks title="About Us" links={aboutLinks} />
           <FooterLinks title="Support" links={supportLinks} />
         </div>
 

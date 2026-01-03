@@ -1,10 +1,21 @@
+"use client"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { HoverCard } from "../pages/HoverCardBorder"
 import { CustomButton } from "../pages/CustomButton"
+import Lottie from 'lottie-react'
+import { useEffect, useState } from 'react'
 
 export default function Owner() {
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    fetch('/Student transparent.json')
+      .then(response => response.json())
+      .then(data => setAnimationData(data))
+      .catch(error => console.error('Error loading animation:', error));
+  }, []);
   return (
     <div className="max-w-7xl mx-auto py-3 my-6 ">
       <div className="flex flex-col md:flex-row items-center gap-8 rounded-lg overflow-hidden">
@@ -30,25 +41,19 @@ export default function Owner() {
 to master your subjects and approach every exam with confidence.
 
             </h2>
-            <CustomButton>
-              Read more
-            </CustomButton>
+            
            
           </div>
         </div>
         <div className="flex-1  py-4 w-full flex text-center justify-center items-center ">
-            <HoverCard>
-            <div className="w-[300px] justify bg-slate-400 h-[400px]">
-    Animation
-            </div>
-            </HoverCard>
-          {/* <Image
-            height={20}
-            width={200}
-            src="https://templatekit.jegtheme.com/encode/wp-content/uploads/sites/264/2022/04/multiracial-students-at-university-campus-using-gadgets-exam-preparation--e1650431991330.jpg"
-            alt="Students collaborating"
-            className="rounded-lg shadow-lg"
-          />*/}
+          {animationData && (
+            <Lottie
+              animationData={animationData}
+              className="w-full h-full max-w-md"
+              loop={true}
+              autoplay={true}
+            />
+          )}
         </div> 
       </div>
     </div>

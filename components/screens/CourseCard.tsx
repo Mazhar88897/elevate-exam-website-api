@@ -116,7 +116,7 @@ export default function CourseShowcase() {
             </div>
 
             <div className="mt-5">
-              <h3 className="text-lg text-slate-700 mb-2">Register for a login to start a <span className="font-bold">7-day limited-access trial</span></h3>
+              <h3 className="text-lg text-slate-700 mb-2">Register for a login to start a <span className="font-bold">learning</span></h3>
               <h3 className="text-lg text-slate-700 mb-2">Organisation bulk plans available—message us through
                <span className="font-bold"> Contact </span> to learn more. </h3>
            
