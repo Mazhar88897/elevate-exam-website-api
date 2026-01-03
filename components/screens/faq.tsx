@@ -132,10 +132,7 @@ export default function Faq() {
 
   return (
     <div className="flex flex-col justify-center mx-auto py-12 pb-18 items-center px-8">
-      <h1 className="text-4xl font-bold text-slate-700 mb-4 text-center">Frequently Asked Questions</h1>
-      <p className="text-lg text-gray-600 mb-12 text-center max-w-2xl">
-        Find answers to common questions about Elevate Exams
-      </p>
+      
       <div className="max-w-6xl w-full flex flex-wrap gap-8">
         {/* Left Column - General Questions & Study Tools */}
         <div className="flex-1 min-w-[300px] space-y-4">
