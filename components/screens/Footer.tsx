@@ -208,6 +208,7 @@ const languagesLinks = [
 const aboutLinks = [
   { label: "About Us", href: "/main/about" },
   { label: "How It Works", href: "/main/platform" },
+  { label: "blogs", href: "/main/blogs" },
 
 
 
