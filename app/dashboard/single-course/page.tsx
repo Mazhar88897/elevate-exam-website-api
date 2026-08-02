@@ -85,9 +85,6 @@ export default function SingleCoursePage() {
   const [flashModalOpen, setFlashModalOpen] = useState(false)
   const [practiceModalOpen, setPracticeModalOpen] = useState(false)
   const [selectedFlashDomains, setSelectedFlashDomains] = useState<number[]>([])
-  const [selectedPracticeDomains, setSelectedPracticeDomains] = useState<
-    number[]
-  >([])
   // const [practiceTimerOn, setPracticeTimerOn] = useState(false)
 
   useEffect(() => {
@@ -205,7 +202,6 @@ export default function SingleCoursePage() {
 
       setDomains(domainRows)
       setSelectedFlashDomains(domainRows.map((d) => d.id))
-      setSelectedPracticeDomains(domainRows.map((d) => d.id))
 
       // Resume banner from mock exam progress (best-effort)
       try {
@@ -432,7 +428,6 @@ export default function SingleCoursePage() {
                     return
                   }
                   if (item.id === "practice") {
-                    setSelectedPracticeDomains(domains.map((d) => d.id))
                     // setPracticeTimerOn(false)
                     setPracticeModalOpen(true)
                   }
@@ -721,38 +716,21 @@ export default function SingleCoursePage() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {domains.map((domain) => {
-                  const checked = selectedPracticeDomains.includes(domain.id)
-                  return (
-                    <li key={domain.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPracticeDomains((prev) =>
-                            checked
-                              ? prev.filter((id) => id !== domain.id)
-                              : [...prev, domain.id]
-                          )
-                        }}
-                        className="flex w-full items-center gap-3 border border-black bg-white px-4 py-3 text-left transition-colors hover:bg-neutral-50"
+                {domains.map((domain) => (
+                  <li key={domain.id}>
+                    <div className="flex w-full items-center gap-3 border border-black bg-white px-4 py-3 text-left">
+                      <span
+                        className="flex h-5 w-5 shrink-0 items-center justify-center border border-black bg-black text-white"
+                        aria-hidden
                       >
-                        {/* <span
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center border border-black ${
-                            checked ? "bg-black text-white" : "bg-white"
-                          }`}
-                          aria-hidden
-                        >
-                          {checked ? (
-                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                          ) : null}
-                        </span> */}
-                        <span className="text-sm font-medium text-black">
-                          {domain.name}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </span>
+                      <span className="text-sm font-medium text-black">
+                        {domain.name}
+                      </span>
+                    </div>
+                  </li>
+                ))}
               </ul>
             )}
 
@@ -797,11 +775,12 @@ export default function SingleCoursePage() {
             </button>
             <button
               type="button"
-              disabled={selectedPracticeDomains.length === 0}
+              disabled={domains.length === 0}
               onClick={() => {
+                const allDomainIds = domains.map((d) => d.id)
                 sessionStorage.setItem(
                   "practice_domain_ids",
-                  JSON.stringify(selectedPracticeDomains)
+                  JSON.stringify(allDomainIds)
                 )
                 // sessionStorage.setItem(
                 //   "practice_timer_on",
