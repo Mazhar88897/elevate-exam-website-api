@@ -192,8 +192,9 @@ export default function PracticeQuizPage() {
 
         let progress: ProgressApiResponse | null = null
         if (pRes.ok) {
-          progress = await pRes.json()
-          setApiCorrectCount(progress.correct_count || 0)
+          const progressData = (await pRes.json()) as ProgressApiResponse
+          progress = progressData
+          setApiCorrectCount(progressData.correct_count || 0)
         }
 
         const progressMap = new Map<number, number | null>()
