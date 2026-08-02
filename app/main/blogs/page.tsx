@@ -1,97 +1,142 @@
 import { ArrowRight } from "lucide-react"
-import { HoverCard } from "@/components/pages/HoverCard"
 import Link from "next/link"
-import { Highlight } from "@/components/pages/Highlight"
 
 type Blog = {
   id: number
   title: string
   primary_description?: string
+  author?: string
+  date?: string
+  category?: string
 }
 
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
+
+function formatDate(iso?: string) {
+  if (!iso) return ""
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
+function estimateReadMinutes(text?: string) {
+  const words = (text || "").trim().split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.ceil(words / 200) + 3)
+}
 
 export default async function LatestArticles() {
   let blogs: Blog[] = []
-  
+
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
     if (!baseUrl) {
-      console.error('NEXT_PUBLIC_BASE_URL is not set')
       return (
-        <div className="container mx-auto px-4 py-16 max-w-7xl">
-          <div className="mb-12 text-center">
-            <h2 className="text-4xl font-bold text-[#111827] inline-block relative">
-              Latest <Highlight>Articles Grid</Highlight> 
-            </h2>
-          </div>
-          <div className="text-center text-gray-600">
-            <p>Unable to load blogs. Please check your environment configuration.</p>
-          </div>
+        <div className="mx-auto max-w-[720px] px-6 py-20 text-center">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            Blog
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-black">
+            Latest articles
+          </h1>
+          <p className="mt-4 text-sm text-neutral-500">
+            Unable to load blogs. Please check your environment configuration.
+          </p>
         </div>
       )
     }
 
-    const res = await fetch(`${baseUrl}/blogs/`, { 
+    const res = await fetch(`${baseUrl}/blogs/`, {
       cache: "no-store",
-      next: { revalidate: 0 }
+      next: { revalidate: 0 },
     })
-    
+
     if (!res.ok) {
       throw new Error(`Failed to fetch blogs: ${res.status} ${res.statusText}`)
     }
-    
+
     blogs = (await res.json()) as Blog[]
   } catch (error) {
-    console.error('Error fetching blogs:', error)
-    // Return empty state or error message
+    console.error("Error fetching blogs:", error)
     return (
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <div className="mb-12 text-center">
-          <h2 className="text-4xl font-bold text-[#111827] inline-block relative">
-            Latest <Highlight>Articles Grid</Highlight> 
-          </h2>
-        </div>
-        <div className="text-center text-gray-600">
-          <p>Unable to load blogs at this time. Please try again later.</p>
-        </div>
+      <div className="mx-auto max-w-[720px] px-6 py-20 text-center">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          Blog
+        </p>
+        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-black">
+          Latest articles
+        </h1>
+        <p className="mt-4 text-sm text-neutral-500">
+          Unable to load blogs at this time. Please try again later.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-7xl">
-      <div className="mb-12 text-center">
-        <h2 className="text-4xl font-bold text-[#111827] inline-block relative">
-          Latest <Highlight>Articles Grid</Highlight> 
-        </h2>
-      </div>
-      {blogs.length === 0 ? (
-        <div className="text-center text-gray-600 py-12">
-          <p>No articles available at this time.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-6">
-          {blogs.map((blog) => (
-            <HoverCard key={blog.id}> 
-              <div className="flex p-4 flex-col">
-                <h3 className="text-xl font-bold mb-2 text-slate-700 line-clamp-2">{blog.title}</h3>
-                <p className="text-gray-600 mb-4 flex-grow line-clamp-2">{blog.primary_description}</p>
-                <div className="mt-auto">
-                  <Link 
-                    href={`/main/blogs/${blog.id}`} 
-                    className="mt-auto py-1 inline-flex items-center hover:border-blue-500 text-slate-700 text-sm font-medium border-b border-black"
-                  >
-                    Read More <ArrowRight className="ml-1 h-4 w-4" />
+    <div className="bg-white text-black">
+      <div className="mx-auto max-w-[720px] px-6 pb-20 pt-14 sm:pt-20">
+        <header>
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            From the blog
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-black sm:text-4xl">
+            Latest articles
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-500">
+            Study tips, exam technique, and how to get more from your practice.
+          </p>
+          <div className="mt-8 h-px w-full bg-[#F5C6C6]" aria-hidden />
+        </header>
+
+        {blogs.length === 0 ? (
+          <p className="mt-12 text-sm text-neutral-500">
+            No articles available at this time.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-neutral-200">
+            {blogs.map((blog) => {
+              const minutes = estimateReadMinutes(blog.primary_description)
+              const category = blog.category?.trim() || "Insights"
+              return (
+                <li key={blog.id} className="py-8">
+                  <Link href={`/main/blogs/${blog.id}`} className="group block">
+                    <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                      {category}
+                      <span className="mx-2 text-[#F5C6C6]">•</span>
+                      {minutes} min read
+                    </p>
+                    <h2 className="mt-3 font-display text-2xl font-bold leading-snug tracking-tight text-black transition-colors group-hover:text-neutral-700">
+                      {blog.title}
+                    </h2>
+                    {blog.primary_description ? (
+                      <p className="mt-3 line-clamp-2 font-display text-base leading-relaxed text-neutral-500">
+                        {blog.primary_description}
+                      </p>
+                    ) : null}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                      <p className="font-mono text-[12px] text-neutral-400">
+                        By {blog.author?.trim() || "ElevateExams"}
+                        {blog.date ? (
+                          <>
+                            <span className="mx-2 text-[#F5C6C6]">•</span>
+                            {formatDate(blog.date)}
+                          </>
+                        ) : null}
+                      </p>
+                      <span className="inline-flex items-center gap-1 font-display text-sm font-semibold text-black">
+                        Read more
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </div>
                   </Link>
-                </div>
-              </div>
-            </HoverCard> 
-          ))}
-        </div>
-      )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
-

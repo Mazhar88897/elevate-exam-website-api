@@ -1,110 +1,138 @@
-"use client" 
-import React from "react";
-import Link from "next/link";
-import { ChevronDown , ChevronUp ,   User, Settings, LogOut, HelpCircle, ShoppingCart, ShieldCheck } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+"use client"
+
+import React from "react"
+import Link from "next/link"
+import {
+  HelpCircle,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 const menuOptions = [
-  { icon: <User className="w-4 h-4 mr-2" />, text: "My Profile", href: "/dashboard/account" },
-  // { icon: <ShoppingCart className="w-4 h-4 mr-2" />, text: "Buy Domains", href: "/dashboard/add-domain" },
-  { icon: <ShieldCheck className="w-4 h-4 mr-2" />, text: "Subscribed Domains", href: " /dashboard/current-subscription" },
-
-  { icon: <HelpCircle className="w-4 h-4 mr-2" />, text: "Help Center", href: "/dashboard/help" },
-
-  // Logout will be handled separately
-];
+  {
+    icon: <ShieldCheck className="mr-2 h-4 w-4" />,
+    text: "Subscription",
+    href: "/dashboard/current-subscription",
+  },
+  { icon: <HelpCircle className="mr-2 h-4 w-4" />, text: "Help Center", href: "/dashboard/help" },
+]
 
 export default function Topbar() {
-  const router = useRouter();
-  const [open, setOpen] = React.useState(false);
-  const [logoutOpen, setLogoutOpen] = React.useState(false);
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  const [userName, setUserName] = React.useState<string>("");
+  const router = useRouter()
+  const [open, setOpen] = React.useState(false)
+  const [logoutOpen, setLogoutOpen] = React.useState(false)
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
+  const [userName, setUserName] = React.useState("")
 
-  // Safely access sessionStorage on client side
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const name = sessionStorage.getItem('name') || '';
-      setUserName(name);
+    if (typeof window !== "undefined") {
+      setUserName(sessionStorage.getItem("name") || "")
     }
-  }, []);
+  }, [])
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
+    setIsLoggingOut(true)
     try {
-      // Get the auth token from sessionStorage (only on client side)
-      const authToken = typeof window !== 'undefined' ? sessionStorage.getItem('Authorization') : null;
-      
-      if (!authToken) {
-        // If no token, just clear session and redirect
-        if (typeof window !== 'undefined') {
-          sessionStorage.clear();
-        }
-        router.push('/auth/sign-in');
-        return;
+      const authToken =
+        typeof window !== "undefined"
+          ? sessionStorage.getItem("Authorization")
+          : null
+
+      if (authToken) {
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/token/logout`, {
+          method: "POST",
+          headers: {
+            Authorization: `${authToken}`,
+            "Content-Type": "application/json",
+          },
+        })
       }
-
-      // Call logout API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/token/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      // Clear session storage regardless of API response
-      if (typeof window !== 'undefined') {
-        sessionStorage.clear();
-      }
-
-      // Redirect to sign-in page
-      router.push('/auth/sign-in');
     } catch (error) {
-      console.error('Logout error:', error);
-      // Even if API call fails, clear session and redirect
-      if (typeof window !== 'undefined') {
-        sessionStorage.clear();
-      }
-      router.push('/auth/sign-in');
+      console.error("Logout error:", error)
     } finally {
-      setIsLoggingOut(false);
-      setLogoutOpen(false);
+      if (typeof window !== "undefined") sessionStorage.clear()
+      setIsLoggingOut(false)
+      setLogoutOpen(false)
+      router.push("/auth/sign-in")
     }
-  };
+  }
+
   return (
-    <div className="flex items-center justify-end px-6 py-4 bg-white dark:bg-background relative">
-      <div className="flex items-center cursor-pointer select-none" onClick={() => setOpen(!open)}>
-        {open ? <ChevronUp className="w-6 h-6 text-gray-500  mx-2" /> : <ChevronDown className="w-6 h-6 text-gray-500  mx-2" />}
-        <div className="h-8 w-8 rounded-full bg-xcolor flex items-center justify-center text-white mr-2">{userName?.charAt(0).toUpperCase() || 'U'}</div>
-          <span className="hidden md:inline text-sm text-gray-600 dark:text-white">{userName || 'User'}</span>
-      </div>
-      {open && (
-        <div className="absolute right-6 top-16 w-60 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 z-50">
-          {menuOptions.map((option, idx) => (
-            <Link href={option.href} key={idx} className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200">
-              {option.icon}
-              {option.text}
-            </Link>
-          ))}
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center bg-[#F5C6C6] font-display text-[11px] font-bold text-black">
+            EE
+          </span>
+          <span className="font-display text-[17px] font-bold tracking-tight text-black">
+            ElevateExams
+          </span>
+        </Link>
+
+        <div className="relative flex items-center gap-3">
           <button
-            className="flex items-center w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
-            onClick={() => setLogoutOpen(true)}
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="hidden text-sm font-medium text-neutral-700 sm:block"
           >
-            <LogOut className="w-4 h-4 mr-2" /> Logout
+            {userName || "User"}
           </button>
+          <button
+            type="button"
+            onClick={() => setLogoutOpen(true)}
+            className="border border-black bg-white px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-neutral-50"
+          >
+            Log out
+          </button>
+
+          {open && (
+            <div className="absolute right-0 top-11 w-56 border border-neutral-200 bg-white py-1 shadow-lg">
+              {menuOptions.map((option) => (
+                <Link
+                  key={option.href}
+                  href={option.href}
+                  className="flex items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50"
+                  onClick={() => setOpen(false)}
+                >
+                  {option.icon}
+                  {option.text}
+                </Link>
+              ))}
+              <button
+                type="button"
+                className="flex w-full items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50"
+                onClick={() => {
+                  setOpen(false)
+                  setLogoutOpen(true)
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </button>
+            </div>
+          )}
         </div>
-      )}
-      {/* Logout Confirmation Modal */}
+      </div>
+
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-background">
+        <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Confirm Logout</DialogTitle>
-            <DialogDescription className="text-muted-foreground">Are you sure you want to log out of your account?</DialogDescription>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out of your account?
+            </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:space-x-2">
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setLogoutOpen(false)}>
               Cancel
             </Button>
@@ -113,11 +141,11 @@ export default function Topbar() {
               onClick={handleLogout}
               disabled={isLoggingOut}
             >
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-} 
+    </header>
+  )
+}

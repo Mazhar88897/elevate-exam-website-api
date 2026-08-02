@@ -6,6 +6,7 @@ import { Star, X, ArrowLeft, ArrowRight, Shuffle, ChevronRight, ChevronDown, Loa
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ModalProvider, useModal } from "@/components/dashboardItems/note"
+import { FREE_LIMIT_PAY_MODAL_OPEN_EVENT } from "@/components/dashboardItems/free-limit-pay-modal"
 import Image from "next/image"
 import { toast } from "react-hot-toast"
 
@@ -211,6 +212,7 @@ function FlashcardContent() {
   
   // API data states
   const [courseData, setCourseData] = useState<CourseAPI | null>(null)
+  const [selectedDomainIds, setSelectedDomainIds] = useState<number[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -225,6 +227,18 @@ function FlashcardContent() {
     }
     
     hasFetchedRef.current = true
+
+    try {
+      const raw = sessionStorage.getItem("flashcard_domain_ids")
+      if (raw) {
+        const ids = JSON.parse(raw)
+        if (Array.isArray(ids) && ids.length > 0) {
+          setSelectedDomainIds(ids)
+        }
+      }
+    } catch {
+      // ignore invalid selection
+    }
     
     const fetchFlashcardsData = async () => {
       try {
@@ -279,6 +293,9 @@ function FlashcardContent() {
     }
 
     const filteredChapters = courseData.chapters
+      .filter((chapter) =>
+        !selectedDomainIds || selectedDomainIds.includes(chapter.id)
+      )
       .map((chapter) => {
         const subchapters = chapter.subtopics
           .filter((subtopic) => subtopic.flashcards && subtopic.flashcards.length > 0)
@@ -302,7 +319,7 @@ function FlashcardContent() {
       courseName: courseData.name,
       chapters: filteredChapters,
     }
-  }, [courseData])
+  }, [courseData, selectedDomainIds])
 
   // Fallback course data for when API is not available
 
@@ -558,9 +575,22 @@ function FlashcardContent() {
     changeCard(randomChapterIndex, randomSubchapterIndex, randomCardIndex)
   }
 
-  // Handle card flip
+  // Handle card flip (free tier: block revealing the answer when QuestionCountFree >= 10)
   const handleCardFlip = () => {
-    setFlipped(!flipped)
+    if (!flipped) {
+      const status = sessionStorage.getItem("subscription_status")
+      if (status !== "active") {  
+        const raw = sessionStorage.getItem("QuestionCountFree")
+        const n = parseInt(raw ?? "0", 10)
+        const freeCount = Number.isFinite(n) ? n : 0
+        if (freeCount >= 10) {
+          window.dispatchEvent(new CustomEvent(FREE_LIMIT_PAY_MODAL_OPEN_EVENT))
+          return
+        }
+        sessionStorage.setItem("QuestionCountFree", (freeCount + 1).toString())
+      }
+      setFlipped(!flipped)
+    }
   }
 
   // Handle favorite toggle

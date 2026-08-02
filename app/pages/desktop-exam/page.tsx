@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { AIChatInterface } from "@/components/dashboardItems/ai-chat"
+import { FREE_LIMIT_PAY_MODAL_OPEN_EVENT } from '@/components/dashboardItems/free-limit-pay-modal'
 
 
 // Utility function for class names
@@ -997,6 +998,17 @@ function QuizPage() {
   // const [isQuestionSubmitting, setIsQuestionSubmitting] = useState(false);
   const handleContinue = async () => {
     // Submit to API before moving to next question
+    const status = (sessionStorage.getItem("subscription_status") ?? "").trim().toLowerCase()
+    if (status !== "active") {
+      const raw = sessionStorage.getItem("QuestionCountFree")
+      const n = parseInt(raw ?? "0", 10)
+      const freeCount = Number.isFinite(n) ? n : 0
+      if (freeCount >= 10) {
+        window.dispatchEvent(new CustomEvent(FREE_LIMIT_PAY_MODAL_OPEN_EVENT))
+        return
+      }
+      sessionStorage.setItem("QuestionCountFree", (freeCount + 1).toString())
+    }
     setIsQuestionSubmitting(true)   
     const questionId = getCurrentQuestionId()
     if (questionId) {

@@ -182,7 +182,7 @@ export default function CourseLandingPage() {
             <div className="p-6 space-y-6">
               <div className="flex items-baseline justify-between">
                 <div className="text-3xl font-bold">
-                £5.99<span className="text-sm text-gray-500 font-normal">/Domain</span>
+                £5.99<span className="text-sm text-gray-500 font-normal"> Includes All Domain</span>
                 </div>
                
               </div>
@@ -221,11 +221,11 @@ export default function CourseLandingPage() {
                 
                 </div>
               </div>
-             <CustomButton onClick={() =>  {setIsModalOpen(true);
+             {/* <CustomButton onClick={() =>  {setIsModalOpen(true);
                                             sessionStorage.setItem('FromLandingPage','true');
                                             sessionStorage.setItem('CourseIdFromLandingPage', courseId as string);
                                             sessionStorage.setItem('purchaseModalOpen', "true");
-             }}><p className="text-sm font-semibold">Try Now!</p></CustomButton>
+             }}><p className="text-sm font-semibold">Try Now!</p></CustomButton> */}
             </div>
           </CardContent>
           </HoverCard>

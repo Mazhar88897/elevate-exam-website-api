@@ -1,14 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-// import { Checkbox } from "@/components/ui/checkbox"
-import { CustomButton } from "@/components/pages/CustomButton"
+import { Loader2 } from "lucide-react"
 import { toast } from "react-hot-toast"
 
 interface LeaveReplyProps {
   blogId: number
 }
+
+const fieldClass =
+  "w-full border border-black bg-white px-3 py-2.5 font-display text-sm text-black outline-none placeholder:text-neutral-400"
+
+const labelClass =
+  "mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400"
 
 export default function LeaveReply({ blogId }: LeaveReplyProps) {
   const [formData, setFormData] = useState({
@@ -18,18 +22,24 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.name.trim() || !formData.email.trim() || !formData.comment.trim()) {
+
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.comment.trim()
+    ) {
       toast.error("Please fill in all required fields")
       return
     }
@@ -37,21 +47,24 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/blog_replies/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          blog: blogId.toString(),
-          name: formData.name,
-          email: formData.email,
-          comment: formData.comment,    
-        })
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/blog_replies/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            blog: blogId.toString(),
+            name: formData.name,
+            email: formData.email,
+            comment: formData.comment,
+          }),
+        }
+      )
 
       if (!response.ok) {
-        throw new Error('Failed to submit reply')
+        throw new Error("Failed to submit reply")
       }
 
       toast.success("Reply submitted successfully!")
@@ -61,7 +74,7 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
         comment: "",
       })
     } catch (error) {
-      console.error('Error submitting reply:', error)
+      console.error("Error submitting reply:", error)
       toast.error("Failed to submit reply. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -69,16 +82,19 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-12 mb-16">
-      <h2 className="text-3xl font-bold text-slate-900 mb-4">Leave a Reply</h2>
-      <p className="text-slate-500 mb-4 text-sm">
-        Your email address will not be published. Required fields are marked <span className="text-red-500">*</span>
+    <div className="mt-16 border-t border-black pt-12">
+      <h2 className="font-display text-2xl font-bold tracking-tight text-black">
+        Leave a reply
+      </h2>
+      <p className="mt-2 text-sm text-neutral-500">
+        Your email address will not be published. Required fields are marked{" "}
+        <span className="text-black">*</span>
       </p>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="mb-6">
-          <label htmlFor="comment" className="block mb-2 text-sm font-medium text-medium text-slate-700">
-            Comment <span className="text-red-500">*</span>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <div>
+          <label htmlFor="comment" className={labelClass}>
+            Comment *
           </label>
           <textarea
             id="comment"
@@ -87,13 +103,13 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
             required
             value={formData.comment}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:none"
-          ></textarea>
+            className={`${fieldClass} resize-y`}
+          />
         </div>
-        
-        <div className="mb-6">
-          <label htmlFor="name" className="block mb-2 text-sm font-medium text-slate-700">
-            Name <span className="text-red-500">*</span>
+
+        <div>
+          <label htmlFor="name" className={labelClass}>
+            Name *
           </label>
           <input
             type="text"
@@ -102,13 +118,13 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
             required
             value={formData.name}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:none"
-            />
+            className={fieldClass}
+          />
         </div>
-        
-        <div className="mb-6">
-          <label htmlFor="email" className="block mb-2 font-medium text-sm text-slate-700">
-            Email <span className="text-red-500">*</span>
+
+        <div>
+          <label htmlFor="email" className={labelClass}>
+            Email *
           </label>
           <input
             type="email"
@@ -117,30 +133,24 @@ export default function LeaveReply({ blogId }: LeaveReplyProps) {
             required
             value={formData.email}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:none"
-            />
+            className={fieldClass}
+          />
         </div>
-        
-      
-        
-        {/* <div className="flex items-start mb-6">
-          <div className="flex items-center h-5">
-            <Checkbox id="save-info" />
-          </div>
-          <div className="ml-3 text-sm">
-            <label htmlFor="save-info" className="font-medium text-slate-600">
-              Save my name, email, and website in this browser for the next time I comment.
-            </label>
-          </div>
-        </div> */}
-        
-        <div className={isSubmitting ? "opacity-50 pointer-events-none" : ""}>
-          <CustomButton>
-              <p className="text-sm text-semibold">
-                {isSubmitting ? "Submitting..." : "Send Message"}
-              </p>
-          </CustomButton>
-        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 border border-black bg-black px-5 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Submitting…
+            </>
+          ) : (
+            "Send message"
+          )}
+        </button>
       </form>
     </div>
   )

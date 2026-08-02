@@ -1,160 +1,81 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { Search, X, ChevronDown } from "lucide-react"
-import Image from "next/image"
+import { ArrowRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
-import { HoverCard } from "../pages/hoverCardHard"
 
 interface NavItem {
   title: string
-  href?: string
-  hasDropdown?: boolean
-  submenu?: { title: string; href: string }[]
+  href: string
 }
 
 const navItems: NavItem[] = [
-  { title: "Exam Prep", href: "/main/courses" },
-   { title: "Pricing", href: "/main/pricing" },
-   { title: "How It Works", href: "/main/platform" }, 
-   { title: "Contact Us", href: "/main/contact" },
-
-  // {
-  //   title: "Exams",
-  //   hasDropdown: true,
-  //   submenu: [
-  //     { title: "Exams", href: "/main/courses" },
-  //   ],
-  // },
-  // { title: "How It Works", href: "/main/platform" },
-  // {
-  //   title: "Pages",
-  //   hasDropdown: true,
-  //   submenu: [
-  //     { title: "About Us", href: "/main/about" },
-  //     { title: "Contact Us", href: "/main/contact" },
-  //     { title: "FAQ", href: "/main/faq" },
-  //     {title: "pricing", href: "/main/pricing" },
-  //   ],
-  // },
-  // {
-  //   title: "Blog",
-  //   hasDropdown: true,
-  //   submenu: [
-  //     { title: "Blog Grid", href: "/main/blogs" },
-     
-  //   ],
-  // },
-  // { title: "Contact", href: "/main/contact" },
+  { title: "Courses", href: "/#courses" },
+  { title: "Features", href: "/#features" },
+  { title: "Blog", href: "/#blog" },
+  { title: "How it works", href: "/#how-it-works" },
 ]
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const toggleDropdown = (title: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }))
-  }
-
-  const handleMouseEnter = (title: string) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
-    setActiveDropdown(title)
-  }
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setActiveDropdown(null)
-    }, 500) // 500ms delay (half a second)
-  }
 
   return (
-    <header className="w-full sm:mx-auto xl:px-[4rem] bg-white xl:bg-[#FDFBFB]">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4">
-        <Link href="/" className="flex items-center">
-          <Logo />
+    <header className="w-full border-b-[2px] border-black bg-white">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-6 lg:px-10 xl:px-12">
+        {/* Brand — left */}
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-[#F5C6C6] font-display text-[11px] font-bold tracking-tight text-black">
+            EE
+          </span>
+          <span className="font-display text-[17px] font-bold tracking-tight text-black">
+            ElevateExams
+          </span>
         </Link>
 
-        <nav className="hidden xl:flex items-center space-x-8">
-          <ul className="flex space-x-8">
-            {navItems.map((item) => (
-              <li
-                key={item.title}
-                className="relative group"
-                onMouseEnter={() => item.hasDropdown && handleMouseEnter(item.title)}
-                onMouseLeave={handleMouseLeave}
-              >
-                {item.hasDropdown ? (
-                  <button className="flex items-center text-sm font-semibold text-slate-700 hover:text-[#1a2352]/80">
-                    {item.title}
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </button>
-                ) : (
-                  <Link href={item.href || "#"} className="flex items-center text-sm font-semibold text-slate-700 hover:text-[#1a2352]/80">
-                    {item.title}
-                  </Link>
-                )}
-                {item.hasDropdown && (
-                  <div
-                    className={`absolute left-0 top-full z-10 mt-5 w-48 rounded-md border bg-white xl:bg-[#FDFBFB] shadow-lg transition-opacity duration-200 ${
-                      activeDropdown === item.title
-                        ? "opacity-100 visible"
-                        : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
-                    }`}
-                  >
-                    {item.submenu?.map((subitem) => (
-                      <Link key={subitem.title} href={subitem.href} className="block text-xs text-slate-500 px-4 xl:py-3 py-1 hover:text-slate-300">
-                        {subitem.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-          
-          {/* Search Bar */}
-          <div className="flex items-center border border-gray-300 rounded-lg p-2 w-44 bg-white shadow-sm hover:shadow-md transition-shadow">
-            <input
-              type="text"
-              placeholder="Search " 
-              className="w-full text-sm flex-grow outline-none bg-transparent px-2 text-gray-700 placeholder-gray-400"
-            />
-            <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
-          </div>
-        </nav>
+        {/* Links + actions — right */}
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-8 xl:flex">
+            <nav className="flex items-center gap-7">
+              {navItems.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="text-[14px] font-medium text-neutral-500 transition-colors hover:text-black"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
 
-        <div className="flex items-center space-x-4">
-          {/* Sign in and Create Account Buttons */}
-          <div className="hidden xl:flex items-center space-x-3">
-            <Link 
-              href="/auth/sign-in" 
-              className="px-4 py-2 text-sm font-medium text-[#1a2352] hover:text-[#1a2352]/80 transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link 
-              href="/auth/sign-up" 
-              className="px-6 py-2 bg-[#1a2352] text-white text-sm font-medium rounded-lg hover:bg-[#1a2352]/90 transition-colors shadow-sm hover:shadow-md"
-            >
-              Create Account
-            </Link>
+            {/* Vertical divider */}
+            <div className="h-6 w-px bg-neutral-200" aria-hidden />
+
+            <div className="flex items-center gap-2.5">
+              <Link
+                href="/auth/sign-in"
+                className="inline-flex items-center rounded-[4px] border border-black bg-white px-4 py-2 text-[13px] font-medium text-black transition-colors hover:bg-neutral-50"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth/sign-up"
+                className="inline-flex items-center gap-1.5 rounded-[4px] bg-black px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-neutral-800"
+              >
+                Get started
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </Link>
+            </div>
           </div>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="xl:hidden">
-            <HoverCard> 
-              <Button variant="outline" size="icon" className="xl:hidden border rounded-md p-2 h-10 w-10">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-[4px] border border-neutral-300"
+              >
                 <span className="sr-only">Toggle menu</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -166,87 +87,68 @@ export default function Navbar() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="h-6 w-6"
+                  className="h-5 w-5"
                 >
                   <line x1="4" x2="20" y1="12" y2="12" />
                   <line x1="4" x2="20" y1="6" y2="6" />
                   <line x1="4" x2="20" y1="18" y2="18" />
                 </svg>
               </Button>
-              </HoverCard> 
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] p-0 [&>button]:hidden">
-              <div className="flex h-20 items-center border-b px-6">
-                <Link href="/" className="flex items-center">
-                  <Logo />
+              <div className="flex h-[72px] items-center justify-between border-b border-neutral-200 px-6">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2.5"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-[#F5C6C6] font-display text-[11px] font-bold text-black">
+                    EE
+                  </span>
+                  <span className="font-display text-[17px] font-bold tracking-tight text-black">
+                    ElevateExams
+                  </span>
                 </Link>
-                {/* isko comment */}
-                <Button variant="ghost" size="icon" className="ml-auto items-center mt-[-5px] mr-[-10px]" onClick={() => setIsOpen(false)}>
-                <HoverCard> 
-                  <X className="h-5 w-5 m-1" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="h-5 w-5" />
                   <span className="sr-only">Close</span>
-                  </HoverCard>
                 </Button>
-                
               </div>
-              <nav className="px-6 py-4">
+              <nav className="px-6 py-6">
                 <ul className="space-y-4">
                   {navItems.map((item) => (
-                    <li key={item.title} className="py-1">
-                      {item.hasDropdown ? (
-                        <div>
-                          <button
-                            onClick={() => toggleDropdown(item.title)}
-                            className="flex w-full items-center justify-between text-lg text-[#1a2352] hover:text-[#1a2352]/80"
-                          >
-                            {item.title}
-                            <ChevronDown
-                              className={`h-5 w-5 transition-transform ${openDropdowns[item.title] ? "rotate-180" : ""}`}
-                            />
-                          </button>
-                          {openDropdowns[item.title] && item.submenu && (
-                            <div className="mt-2 ml-4 space-y-2">
-                              {item.submenu.map((subitem) => (
-                                <Link
-                                  key={subitem.title}
-                                  href={subitem.href}
-                                  className="block py-2 text-[#1a2352]/80 hover:text-[#1a2352]"
-                                >
-                                  {subitem.title}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <Link
-                          href={item.href || "/"}
-                          className="flex items-center text-lg text-[#1a2352] hover:text-[#1a2352]/80"
-                        >
-                          {item.title}
-                        </Link>
-                      )}
+                    <li key={item.title}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className="text-base font-medium text-neutral-600 transition-colors hover:text-black"
+                      >
+                        {item.title}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </nav>
-              
-              {/* Mobile Sign in and Create Account Buttons */}
-              <div className="px-6 py-4 border-t">
-                <div className="flex flex-col space-y-3">
-                  <Link 
-                    href="/auth/sign-in" 
-                    className="w-full px-4 py-3 text-center text-sm font-medium text-[#1a2352] border border-[#1a2352] rounded-lg hover:bg-[#1a2352] hover:text-white transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                  <Link 
-                    href="/auth/sign-up" 
-                    className="w-full px-4 py-3 text-center text-sm font-medium bg-[#1a2352] text-white rounded-lg hover:bg-[#1a2352]/90 transition-colors"
-                  >
-                    Create Account
-                  </Link>
-                </div>
+              <div className="space-y-3 border-t border-neutral-200 px-6 py-6">
+                <Link
+                  href="/auth/sign-in"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full items-center justify-center rounded-[4px] border border-black px-4 py-3 text-sm font-medium text-black"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/auth/sign-up"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-[4px] bg-black px-4 py-3 text-sm font-medium text-white"
+                >
+                  Get started
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </SheetContent>
           </Sheet>
@@ -255,17 +157,3 @@ export default function Navbar() {
     </header>
   )
 }
-
-function Logo() {
-  return (
-    <div className="flex items-center">
-     <Image src="/logo-t.jpg" alt="Logo" width={200} height={150} />
-     {/* <Link href="/" className="flex items-center space-x-2 text-black text-3xl font-semibold">
-     
-     elevate exams
-    </Link> */}
-    
-    </div>
-  )
-}
-

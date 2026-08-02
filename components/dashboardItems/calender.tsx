@@ -2,538 +2,456 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "react-hot-toast"
-import { ChevronLeft, ChevronRight, Edit,   Paperclip, Plus, Trash } from "lucide-react"
+import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
-interface Event {
+interface ExamDate {
   id: number
   day: number
   title: string
   description?: string
-  time: string
-  color: string
-  hasAttachment?: boolean
-  eventMonth: number // 0-indexed month from event_date
+  eventMonth: number
   eventYear: number
+  eventDate: string
+}
+
+function formatYmd(year: number, zeroIndexedMonth: number, day: number) {
+  const m = zeroIndexedMonth + 1
+  const mm = m < 10 ? `0${m}` : `${m}`
+  const dd = day < 10 ? `0${day}` : `${day}`
+  return `${year}-${mm}-${dd}`
+}
+
+function generateCalendarDays(date: Date) {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const firstDow = new Date(year, month, 1).getDay()
+  // Convert Sunday=0 → Monday-first index
+  const mondayFirst = (firstDow + 6) % 7
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const calendarArray: Array<Array<number | null>> = []
+  let week: Array<number | null> = []
+
+  for (let i = 0; i < mondayFirst; i++) week.push(null)
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    if (week.length === 7) {
+      calendarArray.push(week)
+      week = []
+    }
+    week.push(day)
+  }
+
+  while (week.length < 7) week.push(null)
+  calendarArray.push(week)
+
+  while (calendarArray.length < 6) {
+    calendarArray.push([null, null, null, null, null, null, null])
+  }
+
+  return calendarArray
 }
 
 export default function CalendarSchedule() {
+  const today = useMemo(() => new Date(), [])
   const [currentDate, setCurrentDate] = useState(new Date())
-  const currentMonth = currentDate.toLocaleString("default", { month: "long" })
-  const currentYear = currentDate.getFullYear().toString()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [newEventTitle, setNewEventTitle] = useState("")
-  const [newEventDescription, setNewEventDescription] = useState("")
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
-  const [deletingEvent, setDeletingEvent] = useState<Event | null>(null)
-  const [editTitle, setEditTitle] = useState("")
-  const [editDescription, setEditDescription] = useState("")
+  const [selectedDay, setSelectedDay] = useState<number>(today.getDate())
+  const [note, setNote] = useState("")
+  const [events, setEvents] = useState<ExamDate[]>([])
+  const [saving, setSaving] = useState(false)
 
-  // Events fetched from API + locally added via modal
-  const [events, setEvents] = useState<Event[]>([])
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+  const monthLabel = currentDate.toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  })
 
-  // Fetch events once and keep them; highlight only those in the current month
+  const calendarDays = generateCalendarDays(currentDate)
+
   useEffect(() => {
-    const EVENTS_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/events/`
-
-    let isCancelled = false
+    let cancelled = false
     const fetchEvents = async () => {
-      try { 
-        const res = await fetch(EVENTS_URL, {
-          method: 'GET',
-            headers: {
-            'Authorization': `${sessionStorage.getItem('Authorization')}`,
-            'Content-Type': 'application/json',
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/events/`, {
+          method: "GET",
+          headers: {
+            Authorization: `${sessionStorage.getItem("Authorization")}`,
+            "Content-Type": "application/json",
           },
         })
-        if (!res.ok) return
-        const data: Array<{ id: number; title: string; description?: string; event_date: string }> = await res.json()
-        if (isCancelled) return
+        if (!res.ok || cancelled) return
+        const data: Array<{
+          id: number
+          title: string
+          description?: string
+          event_date: string
+        }> = await res.json()
 
-        // Map API events to our Event structure
-        const mapped: Event[] = data.map((item, index) => {
+        const mapped: ExamDate[] = data.map((item, index) => {
           const dateObj = new Date(item.event_date)
           return {
             id: item.id ?? index + 1,
             day: dateObj.getDate(),
             title: item.title,
             description: item.description,
-            time: "",
-            color: getRandomColor(),
             eventMonth: dateObj.getMonth(),
             eventYear: dateObj.getFullYear(),
+            eventDate: item.event_date,
           }
         })
         setEvents(mapped)
-      } catch (e) {
-        // fail silent
+      } catch {
+        // silent
       }
     }
     fetchEvents()
     return () => {
-      isCancelled = true
+      cancelled = true
     }
   }, [])
 
-  // Calendar data for March 2023
-  const calendarDays = generateCalendarDays(currentDate)
+  // Sync note when selecting a day that already has an event
+  useEffect(() => {
+    const existing = events.find(
+      (ev) =>
+        ev.day === selectedDay &&
+        ev.eventMonth === month &&
+        ev.eventYear === year
+    )
+    setNote(existing?.title || existing?.description || "")
+  }, [selectedDay, month, year, events])
 
-  // Compute which days are in the current visible month from fetched events
-  const highlightedDays = useMemo(() => {
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
-    const days = new Set<number>()
-    for (const ev of events) {
-      if (ev.eventYear === year && ev.eventMonth === month) {
-        days.add(ev.day)
-      }
-    }
-    return Array.from(days)
-  }, [events, currentDate])
+  const selectedDateObj = new Date(year, month, selectedDay)
+  const selectedLabel = selectedDateObj
+    .toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+    .toUpperCase()
+
+  const datesSetCount = events.length
 
   const handlePrevMonth = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() - 1)
-    setCurrentDate(newDate)
+    const next = new Date(currentDate)
+    next.setMonth(next.getMonth() - 1)
+    setCurrentDate(next)
+    setSelectedDay(1)
   }
 
   const handleNextMonth = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() + 1)
-    setCurrentDate(newDate)
+    const next = new Date(currentDate)
+    next.setMonth(next.getMonth() + 1)
+    setCurrentDate(next)
+    setSelectedDay(1)
   }
 
-  const handleDayClick = (day: number) => {
-    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-    // Only allow clicking on days in the current month
-    if (day >= 1 && day <= lastDayOfMonth) {
-      const today = new Date()
-      const isPast = new Date(currentDate.getFullYear(), currentDate.getMonth(), day) <
-        new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      if (isPast) {
-        toast.error("Cannot add events in the past")
-        return
-      }
-      setSelectedDay(day)
-      setIsModalOpen(true)
+  const isPastDay = (day: number) => {
+    const d = new Date(year, month, day)
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    return d < t
+  }
+
+  const isToday = (day: number) =>
+    day === today.getDate() &&
+    month === today.getMonth() &&
+    year === today.getFullYear()
+
+  const hasEvent = (day: number) =>
+    events.some(
+      (ev) =>
+        ev.day === day && ev.eventMonth === month && ev.eventYear === year
+    )
+
+  const handleSave = async () => {
+    if (!note.trim()) {
+      toast.error("Please add a note for this exam date")
+      return
     }
-  }
-
-  const handleSubmitEvent = async () => {
-    if (!selectedDay || !newEventTitle.trim()) {
-      toast.error("Please provide a title")
+    if (isPastDay(selectedDay)) {
+      toast.error("Cannot set exam dates in the past")
       return
     }
 
-    const EVENTS_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/events/`
-    const eventDate = formatYmd(currentDate.getFullYear(), currentDate.getMonth(), selectedDay)
-
-    // Double-check block if user navigated back in time between select and submit
-    const today = new Date()
-    const isPast = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay) <
-      new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    if (isPast) {
-      toast.error("Cannot add events in the past")
-      return
-    }
+    setSaving(true)
+    const eventDate = formatYmd(year, month, selectedDay)
+    const existing = events.find(
+      (ev) =>
+        ev.day === selectedDay &&
+        ev.eventMonth === month &&
+        ev.eventYear === year
+    )
 
     try {
-      const res = await fetch(EVENTS_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `${sessionStorage.getItem('Authorization')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: newEventTitle,
-          event_date: eventDate,
-          description: newEventDescription || undefined,
-        }),
-      })
+      if (existing) {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/events/${existing.id}/`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `${sessionStorage.getItem("Authorization")}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: note.trim(),
+              description: note.trim(),
+              event_date: eventDate,
+            }),
+          }
+        )
+        if (!res.ok) {
+          toast.error("Failed to update date")
+          return
+        }
+        setEvents((prev) =>
+          prev.map((ev) =>
+            ev.id === existing.id
+              ? { ...ev, title: note.trim(), description: note.trim() }
+              : ev
+          )
+        )
+        toast.success("Exam date updated")
+      } else {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/events/`, {
+          method: "POST",
+          headers: {
+            Authorization: `${sessionStorage.getItem("Authorization")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: note.trim(),
+            event_date: eventDate,
+            description: note.trim(),
+          }),
+        })
+        if (!res.ok) {
+          toast.error("Failed to save date")
+          return
+        }
+        const created: {
+          id: number
+          title: string
+          description?: string
+          event_date: string
+        } = await res.json()
+        const createdDate = new Date(created.event_date)
+        setEvents((prev) => [
+          ...prev,
+          {
+            id: created.id,
+            day: createdDate.getDate(),
+            title: created.title,
+            description: created.description,
+            eventMonth: createdDate.getMonth(),
+            eventYear: createdDate.getFullYear(),
+            eventDate: created.event_date,
+          },
+        ])
+        toast.success("Exam date saved")
+      }
+    } catch {
+      toast.error("Something went wrong")
+    } finally {
+      setSaving(false)
+    }
+  }
 
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/events/${id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `${sessionStorage.getItem("Authorization")}`,
+          },
+        }
+      )
       if (!res.ok) {
-        toast.error("Failed to add event")
+        toast.error("Failed to delete date")
         return
       }
-
-      const created: { id: number; title: string; description?: string; event_date: string } = await res.json()
-      const createdDate = new Date(created.event_date)
-
-      const newEvent: Event = {
-        id: created.id,
-        day: createdDate.getDate(),
-        title: created.title,
-        description: created.description,
-        time: getCurrentTime(),
-        color: getRandomColor(),
-        eventMonth: createdDate.getMonth(),
-        eventYear: createdDate.getFullYear(),
-      }
-
-      setEvents([...events, newEvent])
-      setNewEventTitle("")
-      setNewEventDescription("")
-      setIsModalOpen(false)
-      toast.success("Event added successfully")
-    } catch (e) {
+      setEvents((prev) => prev.filter((ev) => ev.id !== id))
+      toast.success("Exam date removed")
+    } catch {
       toast.error("Something went wrong")
     }
   }
 
-  // Helper function to get current time in format like "3:30 PM"
-  const getCurrentTime = () => {
-    const now = new Date()
-    let hours = now.getHours()
-    const minutes = now.getMinutes()
-    const ampm = hours >= 12 ? "PM" : "AM"
-
-    hours = hours % 12
-    hours = hours ? hours : 12 // the hour '0' should be '12'
-
-    return `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`
-  }
-
-  // Helper function to get a random color for new events
-  const getRandomColor = () => {
-    const colors = ["bg-emerald-600", "bg-orange-600", "bg-sky-600", "bg-purple-600", "bg-pink-600"]
-    return colors[Math.floor(Math.random() * colors.length)]
-  }
-
-  function formatYmd(year: number, zeroIndexedMonth: number, day: number) {
-    const m = zeroIndexedMonth + 1
-    const mm = m < 10 ? `0${m}` : `${m}`
-    const dd = day < 10 ? `0${day}` : `${day}`
-    return `${year}-${mm}-${dd}`
-  }
-
-  function generateCalendarDays(date: Date) {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-
-    const firstDayOfWeek = new Date(year, month, 1).getDay() // 0..6
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-    const calendarArray: Array<Array<number | null>> = []
-    let week: Array<number | null> = []
-
-    // Leading blanks
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      week.push(null)
-    }
-
-    // Current month days
-    for (let day = 1; day <= daysInMonth; day++) {
-      if (week.length === 7) {
-        calendarArray.push(week)
-        week = []
-      }
-      week.push(day)
-    }
-
-    // Trailing blanks
-    while (week.length < 7) {
-      week.push(null)
-    }
-    calendarArray.push(week)
-
-    // Ensure a consistent 6-row grid by filling remaining weeks with blanks
-    while (calendarArray.length < 6) {
-      calendarArray.push([null, null, null, null, null, null, null])
-    }
-
-    return calendarArray
-  }
-
-
+  const upcoming = [...events].sort(
+    (a, b) =>
+      new Date(a.eventYear, a.eventMonth, a.day).getTime() -
+      new Date(b.eventYear, b.eventMonth, b.day).getTime()
+  )
 
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border max-w-full w-full mx-auto">
-      <div className="p-4 px-5">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-base font-medium text-card-foreground"></h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <button onClick={handlePrevMonth} className="p-1 rounded-full hover:bg-accent">
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </button>
-              <span className="text-sm text-foreground">{currentMonth}</span>
-              <button onClick={handleNextMonth} className="p-1 rounded-full hover:bg-accent">
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
-            <span className="text-sm text-foreground">{currentYear}</span>
-          </div>
-        </div>
+    <section className="border border-neutral-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-neutral-200 px-5 py-4">
+        <CalendarDays className="h-5 w-5 text-neutral-700" strokeWidth={1.75} />
+        <h2 className="font-display text-lg font-bold tracking-tight text-black">
+          Exam Calendar
+        </h2>
+        <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-medium text-neutral-500">
+          {datesSetCount} date{datesSetCount === 1 ? "" : "s"} set
+        </span>
+      </div>
 
-        {/* Calendar Grid */}
-        <div className="mb-6">
-          <div className="grid grid-cols-7 mb-2 gap-x-1">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="text-center text-xs font-medium py-1 bg-muted text-muted-foreground">
-                {day}
+      <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+        {/* Calendar */}
+        <div className="border-b border-neutral-200 p-5 lg:border-b-0 lg:border-r">
+          <div className="mb-5 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="flex h-8 w-8 items-center justify-center border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-50"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <p className="font-display text-sm font-bold text-black">
+              {monthLabel}
+            </p>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="flex h-8 w-8 items-center justify-center border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-50"
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mb-2 grid grid-cols-7 gap-1">
+            {["MO", "TU", "WE", "TH", "FR", "SA", "SU"].map((d) => (
+              <div
+                key={d}
+                className="py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-neutral-400"
+              >
+                {d}
               </div>
             ))}
           </div>
 
-          {calendarDays.map((week, weekIndex) => (
-            <div key={weekIndex} className="grid grid-cols-7 gap-x-1">
-              {week.map((day, dayIndex) => {
-                const isBlank = day === null
-                const isCurrentMonth = !isBlank
-                const hasEventInCurrentMonthYear = !isBlank && events.some(
-                  (event) =>
-                    event.day === day &&
-                    event.eventMonth === currentDate.getMonth() &&
-                    event.eventYear === currentDate.getFullYear(),
-                )
-                const isHighlighted = !isBlank && hasEventInCurrentMonthYear && isCurrentMonth
+          <div className="space-y-1">
+            {calendarDays.map((week, wi) => (
+              <div key={wi} className="grid grid-cols-7 gap-1">
+                {week.map((day, di) => {
+                  if (day === null) {
+                    return <div key={`${wi}-${di}`} className="h-10" />
+                  }
+                  const selected = day === selectedDay
+                  const event = hasEvent(day)
+                  const todayMark = isToday(day)
+                  const past = isPastDay(day)
 
-                return (
-                  <div
-                    key={`${weekIndex}-${dayIndex}`}
-                    className={cn(
-                      "h-8 flex items-center justify-center text-xs border-t border-border",
-                      isCurrentMonth ? "text-foreground" : "text-muted-foreground",
-                      isHighlighted && "bg-blue-500 text-white hover:bg-primary/90",
-                      hasEventInCurrentMonthYear && !isHighlighted && "font-medium",
-                      isBlank
-                        ? ""
-                        : new Date(currentDate.getFullYear(), currentDate.getMonth(), day) < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
-                        ? "cursor-not-allowed"
-                        : "cursor-pointer hover:bg-accent",
-                    )}
-                    onClick={() => !isBlank && handleDayClick(day as number)}
-                  >
-                    {!isBlank ? day : ""}
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Events Section */}
-        <div>
-          <h3 className="text-xs font-semibold text-muted-foreground mb-3">EVENTS</h3>
-          <div className="space-y-3 max-h-44 overflow-y-auto pr-1">
-            {events.map((event) => (
-              <div key={event.id} className="flex items-start justify-between">
-                <div className="flex items-start gap-2 min-w-0">
-                  <div
-                    className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-primary-foreground text-xs shrink-0",
-                      event.color,
-                    )}
-                  >
-                    {event.day}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground whitespace-normal break-words leading-snug">
-                      {event.title}
-                    </p>
-                    {event.description && (
-                      <p className="text-xs text-muted-foreground whitespace-normal break-words leading-snug">
-                        {event.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                  {/* <span className="text-xs text-muted-foreground">{daysLeft(event.eventDate)}</span> */}
-                
-                  <div
-                    className="w-5 h-5 rounded flex items-center justify-center bg-primary text-primary-foreground cursor-pointer"
-                    onClick={() => {
-                      setEditingEvent(event)
-                      setEditTitle(event.title)
-                      setEditDescription(event.description || "")
-                      setIsEditOpen(true)
-                    }}
-                  >
-                    <Edit className="h-2.5 w-2.5" />
-                  </div>
-                  <div
-                    className="w-5 h-5 rounded flex items-center justify-center bg-primary text-primary-foreground cursor-pointer"
-                    onClick={() => {
-                      setDeletingEvent(event)
-                      setIsDeleteOpen(true)
-                    }}
-                  >
-                    <Trash className="h-2.5 w-2.5" />
-                  </div>    
-                </div>
+                  return (
+                    <button
+                      key={`${wi}-${di}`}
+                      type="button"
+                      disabled={past}
+                      onClick={() => setSelectedDay(day)}
+                      className={cn(
+                        "relative flex h-10 flex-col items-center justify-center text-sm transition-colors",
+                        past && "cursor-not-allowed text-neutral-300",
+                        !past && !selected && "text-neutral-800 hover:bg-neutral-50",
+                        selected && "bg-black text-white",
+                        todayMark && !selected && "underline decoration-2 underline-offset-4"
+                      )}
+                    >
+                      {day}
+                      {event && (
+                        <span
+                          className={cn(
+                            "absolute bottom-1.5 h-1 w-1 rounded-full",
+                            selected ? "bg-white" : "bg-black"
+                          )}
+                        />
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Detail panel */}
+        <div className="flex flex-col p-5">
+          <p className="font-mono text-xs tracking-wide text-neutral-400">
+            {selectedLabel}
+          </p>
+
+          <label className="mt-6 mb-1.5 block text-sm font-bold text-black">
+            Note
+          </label>
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. CISSP exam day"
+            disabled={isPastDay(selectedDay)}
+            className="w-full border border-black bg-white px-3 py-2.5 text-sm text-black outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-black disabled:border-neutral-200 disabled:bg-neutral-50"
+          />
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || isPastDay(selectedDay)}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save date"}
+            {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+          </button>
+
+          <div className="mt-6 flex-1 border-t border-neutral-100 pt-4">
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-neutral-400">
+                No exam dates scheduled yet.
+              </p>
+            ) : (
+              <ul className="max-h-40 space-y-2 overflow-y-auto">
+                {upcoming.map((ev) => {
+                  const label = new Date(
+                    ev.eventYear,
+                    ev.eventMonth,
+                    ev.day
+                  ).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                  return (
+                    <li
+                      key={ev.id}
+                      className="flex items-start justify-between gap-2 border border-neutral-200 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-black">
+                          {label}
+                        </p>
+                        <p className="truncate text-xs text-neutral-500">
+                          {ev.title}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(ev.id)}
+                        className="shrink-0 text-neutral-400 transition-colors hover:text-black"
+                        aria-label="Delete exam date"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Add Event Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-background">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Add Event for {currentMonth} {selectedDay}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium text-foreground">
-                Event Title
-              </label>
-              <Input
-                id="title"
-                placeholder="Enter event title"
-                value={newEventTitle}
-                onChange={(e) => setNewEventTitle(e.target.value)}
-                className="bg-background"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="description" className="text-sm font-medium text-foreground">
-                Description
-              </label>
-              <Textarea
-                id="description"
-                placeholder="Enter event description"
-                value={newEventDescription}
-                onChange={(e) => setNewEventDescription(e.target.value)}
-                className="bg-background"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitEvent}>Add Event</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Event Modal */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-background">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Edit Event</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="edit-title" className="text-sm font-medium text-foreground">
-                Event Title
-              </label>
-              <Input
-                id="edit-title"
-                placeholder="Enter event title"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="bg-background"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="edit-description" className="text-sm font-medium text-foreground">
-                Description
-              </label>
-              <Textarea
-                id="edit-description"
-                placeholder="Enter event description"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="bg-background"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!editingEvent) return
-                if (!editTitle.trim()) {
-                  toast.error("Please provide a title")
-                  return
-                }
-                const EVENTS_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/events/${editingEvent.id}/`
-                const eventDate = formatYmd(currentDate.getFullYear(), currentDate.getMonth(), editingEvent.day)
-                try {
-                  const res = await fetch(EVENTS_URL, {
-                    method: 'PUT',
-                    headers: {
-                      'Authorization': `${sessionStorage.getItem('Authorization')}`,
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ title: editTitle, description: editDescription || undefined, event_date: eventDate }),
-                  })
-                  if (!res.ok) {
-                    toast.error("Failed to update event")
-                    return
-                  }
-                  // Reflect the update locally
-                  setEvents(
-                    events.map((ev) =>
-                      ev.id === editingEvent.id
-                        ? { ...ev, title: editTitle, description: editDescription }
-                        : ev,
-                    ),
-                  )
-                  setIsEditOpen(false)
-                  setEditingEvent(null)
-                  toast.success("Event updated successfully")
-                } catch (e) {
-                  toast.error("Something went wrong")
-                }
-              }}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* Delete Confirmation Modal */}
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-background">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Delete Event</DialogTitle>
-          </DialogHeader>
-          <div className="py-2 text-sm text-muted-foreground">
-            Are you sure you want to delete <span className="text-foreground font-medium">{deletingEvent?.title}</span>?
-            This action cannot be undone.
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (!deletingEvent) return
-                const url = `${process.env.NEXT_PUBLIC_BASE_URL}/events/${deletingEvent.id}/`
-                try {
-                  const res = await fetch(url, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `${sessionStorage.getItem('Authorization')}` },
-                  })
-                  if (!res.ok) { toast.error('Failed to delete event'); return }
-                  setEvents(events.filter((ev) => ev.id !== deletingEvent.id))
-                  setIsDeleteOpen(false)
-                  setDeletingEvent(null)
-                  toast.success('Event deleted')
-                } catch (e) {
-                  toast.error('Something went wrong')
-                }
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </section>
   )
 }

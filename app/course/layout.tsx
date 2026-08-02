@@ -4,6 +4,7 @@ import React from "react"
 
 import { useState, useEffect, useMemo } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import { hasPaidAccessFromSession } from "@/lib/payment-access"
 import {
   Home,
   Users,
@@ -51,6 +52,52 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Card, CardContent } from "@/components/ui/card"
 import { NotificationModal } from "@/components/shared/notification-modal"
 
+const FULL_EXAM_PATHS = ["/course/test", "/course/test-analytics"] as const
+
+const CoursePaywallContext = React.createContext<{ openPaywall: () => void }>({
+  openPaywall: () => {},
+})
+
+function CoursePaywallProvider({ children }: { children: React.ReactNode }) {
+  const [payOpen, setPayOpen] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (hasPaidAccessFromSession()) return
+    if (!FULL_EXAM_PATHS.some((p) => p === pathname)) return
+    setPayOpen(true)
+    const id = sessionStorage.getItem("course_id") || ""
+    router.replace(`/course/${id}`)
+  }, [pathname, router])
+
+  return (
+    <CoursePaywallContext.Provider value={{ openPaywall: () => setPayOpen(true) }}>
+      {children}
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Subscribe to access Full Exams</DialogTitle>
+            <DialogDescription>
+              Full Test and Test Analytics are available with an active subscription.
+              Choose a plan to pay and unlock access.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setPayOpen(false)}>
+              Close
+            </Button>
+            <Button type="button" asChild className="bg-xcolor hover:bg-xcolor/90">
+              <Link href="/payment/plan">View plans &amp; pay</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </CoursePaywallContext.Provider>
+  )
+}
+
 interface SidebarProps {
   className?: string
 }
@@ -58,6 +105,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { openPaywall } = React.useContext(CoursePaywallContext)
   const [isOpen, setIsOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -178,7 +226,7 @@ export function Sidebar({ className }: SidebarProps) {
     label: string;
     link?: string;
     badge?: number;
-    subItems?: { label: string; link: string }[];
+    subItems?: { label: string; link: string; requiresSubscription?: boolean }[];
     icon?: LucideIcon;
     color?: string;
   }
@@ -264,7 +312,7 @@ export function Sidebar({ className }: SidebarProps) {
     isLast?: boolean;
     badge?: number;
     link?: string;
-    subItems?: { label: string; link: string }[];
+    subItems?: { label: string; link: string; requiresSubscription?: boolean }[];
     icon?: LucideIcon;
     color?: string;
   }) => {
@@ -316,21 +364,35 @@ export function Sidebar({ className }: SidebarProps) {
           <div className="mt-2 ml-3 space-y-2 ">
             {subItems.map((subItem, subIndex) => {
               const isSubItemActive = pathname === subItem.link;
+
               return (
                 <div key={subIndex} className="relative my-1 pr-2 text-sm text-muted-foreground">
-                  {/* Sub-item vertical line */}
-                  {/* <div className="absolute left-0 w-px bg-gray-200 h-4 top-0" />
-                
-                  <div className="absolute  left-0 top-4 h-px w-3 bg-gray-200" /> */}
-                    {/* Sub-item horizontal line */}
-                  <Link 
-                    href={subItem.link} 
-                    className={`mt-3 transition-colors ml-2 ${
-                      isSubItemActive ? 'text-xcolor' : 'hover:text-primary'
-                    }`}
-                  >
-                    {subItem.label}
-                  </Link>
+                  {subItem.requiresSubscription ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!hasPaidAccessFromSession()) {
+                          openPaywall();
+                          return;
+                        }
+                        router.push(subItem.link);
+                      }}
+                      className={`mt-3 block w-full text-left transition-colors ml-2 ${
+                        isSubItemActive ? "text-xcolor" : "hover:text-primary"
+                      }`}
+                    >
+                      {subItem.label}
+                    </button>
+                  ) : (
+                    <Link
+                      href={subItem.link}
+                      className={`mt-3 transition-colors ml-2 ${
+                        isSubItemActive ? "text-xcolor" : "hover:text-primary"
+                      }`}
+                    >
+                      {subItem.label}
+                    </Link>
+                  )}
                 </div>
               );
             })}
@@ -407,8 +469,8 @@ export function Sidebar({ className }: SidebarProps) {
           icon: Target,
           color: "text-red-500",
           subItems: [
-            { label: "Full Test", link: "/course/test" },
-            { label: "Test Analytics", link: "/course/test-analytics" },
+            { label: "Full Test", link: "/course/test", requiresSubscription: true },
+            { label: "Test Analytics", link: "/course/test-analytics", requiresSubscription: true },
           ]
         },
       ],
@@ -583,14 +645,15 @@ export default function RootLayout({
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="flex min-h-screen">
-  
-        <Sidebar />
-        <main className="flex-1 md:ml-[300px]">
-          <Topbar />
-          <SupportModalProvider>{children}</SupportModalProvider>
-        </main>
-      </div>
+      <CoursePaywallProvider>
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <main className="flex-1 md:ml-[300px]">
+            <Topbar />
+            <SupportModalProvider>{children}</SupportModalProvider>
+          </main>
+        </div>
+      </CoursePaywallProvider>
     </ThemeProvider>
   )
 }

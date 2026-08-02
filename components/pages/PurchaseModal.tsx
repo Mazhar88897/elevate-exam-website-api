@@ -189,6 +189,8 @@ export function PurchaseModal({ open, onOpenChange }: PurchaseModalProps) {
           sessionStorage.setItem("email", userData.email || signInData.email)
           sessionStorage.setItem("id", userData.id?.toString() || "")
           sessionStorage.setItem("name", userData.name || "")
+          const { persistUserPaymentFields } = await import("@/lib/payment-access")
+          persistUserPaymentFields(userData)
         }
       } catch (userErr) {
         console.warn("Error fetching user data:", userErr)

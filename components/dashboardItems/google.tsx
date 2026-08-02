@@ -86,7 +86,7 @@ export const GoogleSignInButton = ({
             className="object-contain"
           />
         )}
-        {isLoading ? 'Signing In...' : 'Sign In with Google'}
+        {isLoading ? 'Signing In...' : 'Continue with Google'}
       </Button>
     </div>
   )

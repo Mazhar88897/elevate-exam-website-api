@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import {
   Loader2,
   Calendar,
@@ -8,207 +9,168 @@ import {
   XCircle,
   CheckCircle2,
   AlertCircle,
+  ArrowRight,
+  X,
 } from "lucide-react"
-import Image from "next/image"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import toast from "react-hot-toast"
 
-// Subscription interface based on API response
-interface Subscription {
-  id: number
-  user: number
-  domain: number
-  stripe_customer_id: string
-  stripe_subscription_id: string
-  price_id: string
-  plan_interval: "month" | "year"
+interface SubscriptionStatus {
   status: string
+  is_active: boolean
+  plan_interval: "month" | "year" | string
+  cancel_at_period_end: boolean
   current_period_start: string
   current_period_end: string
-  cancel_at_period_end: boolean
-  is_active: boolean
 }
 
-// Domain interface
-interface Domain {
-  id: number
-  name: string
-}
-
-// Component
 export default function CurrentSubscriptionsPage() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
-  const [domains, setDomains] = useState<Record<number, Domain>>({})
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Cancel subscription dialog state
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
   const [cancelling, setCancelling] = useState(false)
 
-  // Fetch subscriptions and domains
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const token = sessionStorage.getItem('Authorization')
-        
-        if (!token) {
-          throw new Error('Please log in to view subscriptions')
-        }
+  const fetchStatus = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        // Fetch subscriptions
-        const subscriptionsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/user_active_domains/`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-
-        if (!subscriptionsResponse.ok) {
-          throw new Error(`Failed to fetch subscriptions: ${subscriptionsResponse.statusText}`)
-        }
-
-        const subscriptionsData: Subscription[] = await subscriptionsResponse.json()
-        setSubscriptions(subscriptionsData)
-
-        // Fetch domains to get domain names
-        const domainsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/domains/courses/`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-
-        if (domainsResponse.ok) {
-          const domainsData: Domain[] = await domainsResponse.json()
-          // Create a map of domain ID to domain object
-          const domainMap: Record<number, Domain> = {}
-          domainsData.forEach((domain) => {
-            domainMap[domain.id] = domain
-          })
-          setDomains(domainMap)
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err)
-        setError(err instanceof Error ? err.message : 'An error occurred')
-      } finally {
-        setLoading(false)
+      const token = sessionStorage.getItem("Authorization")
+      if (!token) {
+        throw new Error("Please log in to view subscriptions")
       }
-    }
 
-    fetchData()
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/status/`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          setSubscription(null)
+          return
+        }
+        throw new Error(
+          `Failed to fetch subscription: ${res.status} ${res.statusText}`
+        )
+      }
+
+      const data: SubscriptionStatus = await res.json()
+      setSubscription(data)
+    } catch (err) {
+      console.error("Error fetching subscription status:", err)
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+  useEffect(() => {
+    fetchStatus()
+  }, [fetchStatus])
 
-  // Calculate days remaining
   const getDaysRemaining = (endDate: string) => {
     const end = new Date(endDate)
     const now = new Date()
     const diffTime = end.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
-  // Handle cancel subscription click
-  const handleCancelClick = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
-    setIsCancelDialogOpen(true)
-  }
+  const formatLongDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
 
-  // Handle cancel subscription confirmation
   const handleConfirmCancel = async () => {
-    if (!selectedSubscription) return
+    const token = sessionStorage.getItem("Authorization")
+    if (!token) {
+      toast.error("Please log in again")
+      return
+    }
 
     setCancelling(true)
-    const token = sessionStorage.getItem('Authorization')
 
     try {
-      // Call cancel subscription API
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/${selectedSubscription.id}/cancel/`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/subscription/cancel/`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `${token}`,
+            "Content-Type": "application/json",
           },
         }
       )
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || errorData.message || 'Failed to cancel subscription')
+        throw new Error(
+          (errorData as { detail?: string; message?: string }).detail ||
+            (errorData as { message?: string }).message ||
+            "Failed to cancel subscription"
+        )
       }
 
-      // Update subscription in state
-      setSubscriptions((prev) =>
-        prev.map((sub) =>
-          sub.id === selectedSubscription.id
-            ? { ...sub, cancel_at_period_end: true }
-            : sub
-        )
+      setSubscription((prev) =>
+        prev ? { ...prev, cancel_at_period_end: true } : prev
       )
-
-      toast.success('Subscription will be cancelled at the end of the current period')
+      toast.success("Subscription will be cancelled at the end of the period")
       setIsCancelDialogOpen(false)
-      setSelectedSubscription(null)
-    } catch (error) {
-      console.error('Error cancelling subscription:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while cancelling')
+    } catch (err) {
+      console.error("Error cancelling subscription:", err)
+      toast.error(
+        err instanceof Error ? err.message : "An error occurred while cancelling"
+      )
     } finally {
       setCancelling(false)
     }
   }
 
+  const showCancelButton =
+    subscription &&
+    subscription.is_active &&
+    subscription.status === "active" &&
+    !subscription.cancel_at_period_end
+
+  const daysLeft = subscription
+    ? getDaysRemaining(subscription.current_period_end)
+    : 0
+
+  const planLabel =
+    subscription?.plan_interval === "month"
+      ? "Monthly"
+      : subscription?.plan_interval === "year"
+        ? "Annual"
+        : subscription?.plan_interval || "—"
+
   if (loading) {
     return (
-      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
-        <div className="mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Current Subscriptions</h2>
-            </div>
-            <div className="w-full mr-8 my-6 sm:my-5">
-              <div className="text-center py-8">
-                <div className="flex justify-center space-x-1">
-                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-xcolor rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-3xl px-6 py-16 lg:px-10">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          Account
+        </p>
+        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-black sm:text-3xl">
+          Current subscription
+        </h1>
+        <div className="mt-16 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
         </div>
       </div>
     )
@@ -216,214 +178,229 @@ export default function CurrentSubscriptionsPage() {
 
   if (error) {
     return (
-      <div className="py-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
-        <div className="mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Current Subscriptions</h2>
-            </div>
-            <div className="w-full border-b-2 mr-8 my-6 sm:my-5">
-              <div className="font-bold text-lg text-center text-red-500">{error}</div>
-            </div>
-          </div>
-        </div>
+      <div className="mx-auto max-w-3xl px-6 py-16 lg:px-10">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          Account
+        </p>
+        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-black sm:text-3xl">
+          Current subscription
+        </h1>
+        <p className="mt-8 text-sm text-red-600">{error}</p>
       </div>
     )
   }
 
   return (
-    <div className="p-8 p-4 rounded-[10px] text-black dark:text-white pt-6">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">Current Subscriptions</h1>
+    <div className="mx-auto max-w-3xl px-6 py-12 text-black lg:px-10">
+      <header className="border-b border-black pb-8">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          Account
+        </p>
+        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+          Current subscription
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-500">
+          {subscription ? (
+            <>
+              Your billing period defines how long access lasts. If you cancel,
+              you keep full access through{" "}
+              <span className="font-semibold text-black">
+                {formatLongDate(subscription.current_period_end)}
+              </span>
+              .
+            </>
+          ) : (
+            <>
+              When you have an active All Access plan, your tenure follows the
+              billing period you paid for. Cancelling only stops renewal.
+            </>
+          )}
+        </p>
+      </header>
+
+      {!subscription ? (
+        <div className="mt-12 border border-black bg-[#FDF2F7] px-6 py-10 text-center">
+          <p className="font-display text-lg font-bold text-black">
+            No active subscription
+          </p>
+          <p className="mt-2 text-sm text-neutral-600">
+            Unlock every course domain with All Access.
+          </p>
+          <Link
+            href="/payment/plan"
+            className="mt-6 inline-flex items-center gap-1.5 border border-black bg-black px-5 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+          >
+            View plans
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
+      ) : (
+        <div className="mt-10 space-y-8">
+          <div className="grid gap-0 border border-black sm:grid-cols-2">
+            <div className="border-b border-black px-5 py-6 sm:border-b-0 sm:border-r">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                Status
+              </p>
+              <div className="mt-3">
+                {subscription.status === "active" &&
+                !subscription.cancel_at_period_end ? (
+                  <span className="inline-flex items-center gap-2 border border-black bg-black px-3 py-1.5 font-display text-sm font-semibold text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Active
+                  </span>
+                ) : subscription.cancel_at_period_end ? (
+                  <span className="inline-flex items-center gap-2 border border-black bg-white px-3 py-1.5 font-display text-sm font-semibold text-black">
+                    <AlertCircle className="h-4 w-4" />
+                    Cancelling at period end
+                  </span>
+                ) : (
+                  <span className="inline-flex border border-neutral-300 px-3 py-1.5 font-display text-sm font-semibold text-neutral-600">
+                    {subscription.status}
+                  </span>
+                )}
+              </div>
 
-        {subscriptions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Image src="/nothing.png" alt="No Subscriptions" width={200} height={200} className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">No active subscriptions found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subscriptions.map((subscription) => {
-              const domain = domains[subscription.domain]
-              const domainName = domain?.name || `Domain #${subscription.domain}`
-              const daysRemaining = getDaysRemaining(subscription.current_period_end)
-              const isCancelled = subscription.cancel_at_period_end
+              <p className="mt-8 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                Plan
+              </p>
+              <p className="mt-2 flex items-center gap-2 font-display text-lg font-bold text-black">
+                <CreditCard className="h-5 w-5" strokeWidth={1.75} />
+                All Access · {planLabel}
+              </p>
+            </div>
 
-              return (
-                <div
-                  key={subscription.id}
-                  className="relative flex flex-col border border-gray-300 dark:border-gray-700 rounded-lg hover:border-gray-400 dark:hover:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all shadow-sm hover:shadow-md overflow-hidden"
-                >
-                  {/* Subscription Card Content */}
-                  <div className="p-4">
-                    {/* Domain Name and Status */}
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-base font-semibold truncate pr-2">{domainName}</h3>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {subscription.status === 'active' && !isCancelled ? (
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-xs font-medium">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                          </span>
-                        ) : isCancelled ? (
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-md text-xs font-medium">
-                            <AlertCircle className="w-3 h-3" />
-                            Cancelled
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-md text-xs font-medium">
-                            {subscription.status}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+            <div className="px-5 py-6">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                Time left this period
+              </p>
+              <p className="mt-2 font-display text-4xl font-bold tabular-nums text-black">
+                {daysLeft > 0 ? `${daysLeft}` : "0"}
+                <span className="ml-2 text-base font-semibold text-neutral-400">
+                  {daysLeft > 0 ? "days" : "Period ended"}
+                </span>
+              </p>
 
-                    {/* Plan Interval and Days Remaining - Compact Row */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span className="font-medium capitalize">
-                          {subscription.plan_interval === 'month' ? 'Monthly' : 'Annual'}
-                        </span>
-                      </div>
-                      <div className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-md">
-                        <span className="text-sm font-bold text-xcolor">
-                          {daysRemaining > 0 ? `${daysRemaining}d` : 'Expired'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Period Dates - Compact */}
-                    <div className="mb-3 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <Calendar className="w-3.5 h-3.5 text-xcolor flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <span className="text-gray-500 dark:text-gray-500">Start: </span>
-                          <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                            {new Date(subscription.current_period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <Calendar className="w-3.5 h-3.5 text-xcolor flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <span className="text-gray-500 dark:text-gray-500">End: </span>
-                          <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                            {new Date(subscription.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                          <span className="ml-2 text-red-500 dark:text-gray-500">
-                            {isCancelled ? 'Subscription ended' : ''}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Cancellation Notice - Compact */}
-                    {/* {isCancelled && (
-                      <div className="mb-3 px-2 py-1.5 bg-orange-50/50 dark:bg-orange-900/10 rounded-md">
-                        <div className="flex items-center gap-1.5">
-                          <AlertCircle className="w-3 h-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-                          <span className="text-xs text-orange-700 dark:text-orange-300 font-medium">
-                            Ends {new Date(subscription.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • No auto-renewal
-                          </span>
-                        </div>
-                      </div>
-                    )} */}
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-                    {!isCancelled && subscription.status === 'active' ? (
-                      <button
-                        onClick={() => handleCancelClick(subscription)}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 border border-red-500 hover:bg-red-500 hover:text-white text-red-500 font-medium rounded-md transition-colors text-sm"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>Cancel</span>
-                      </button>
-                    ) : (
-                      <div className="w-full px-3 py-1.5 text-center text-xs text-gray-500 dark:text-gray-400">
-                        {isCancelled ? 'Resubscribe after period ends' : 'Inactive'}
-                      </div>
-                    )}
+              <div className="mt-8 space-y-4 border-t border-neutral-200 pt-5">
+                <div className="flex gap-3">
+                  <Calendar
+                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400"
+                    strokeWidth={1.75}
+                  />
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400">
+                      Period start
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-black">
+                      {formatLongDate(subscription.current_period_start)}
+                    </p>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Cancel Subscription Confirmation Dialog */}
-        <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">Cancel Subscription</DialogTitle>
-              <DialogDescription>
-                Please confirm that you want to cancel this subscription
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedSubscription && (
-              <div className="mt-4 space-y-4">
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <h4 className="font-semibold text-lg mb-2">
-                    {domains[selectedSubscription.domain]?.name || `Domain #${selectedSubscription.domain}`}
-                  </h4>
-                  <p className="text-sm text-gray-500 mb-3">
-                    {selectedSubscription.plan_interval === 'month' ? 'Monthly' : 'Annual'} Plan
-                  </p>
-
-                  <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
-                      <div className="text-sm text-orange-800 dark:text-orange-200">
-                        <p className="font-semibold mb-1">Important Information:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>Your subscription will remain active until <strong>{formatDate(selectedSubscription.current_period_end)}</strong></li>
-                          <li>You will continue to have access until the end of the current billing period</li>
-                          <li>This subscription will <strong>not auto-renew</strong> for the next {selectedSubscription.plan_interval}</li>
-                         
-                        </ul>
-                      </div>
-                    </div>
+                <div className="flex gap-3">
+                  <Calendar
+                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400"
+                    strokeWidth={1.75}
+                  />
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400">
+                      Period end
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-black">
+                      {formatLongDate(subscription.current_period_end)}
+                    </p>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsCancelDialogOpen(false)
-                  setSelectedSubscription(null)
-                }}
-                disabled={cancelling}
+          {subscription.cancel_at_period_end && (
+            <div className="border border-black bg-neutral-50 px-5 py-4">
+              <p className="text-sm leading-relaxed text-neutral-700">
+                Auto-renewal is off. Your paid access continues until{" "}
+                <span className="font-semibold text-black">
+                  {formatLongDate(subscription.current_period_end)}
+                </span>
+                . After that date, the subscription will not renew.
+              </p>
+            </div>
+          )}
+
+          <footer className="border-t border-black pt-8">
+            {showCancelButton ? (
+              <button
+                type="button"
+                onClick={() => setIsCancelDialogOpen(true)}
+                className="inline-flex items-center gap-2 border border-black bg-white px-5 py-2.5 font-display text-sm font-semibold text-black transition-colors hover:bg-black hover:text-white"
               >
-                Keep Subscription
-              </Button>
-              <Button
-                onClick={handleConfirmCancel}
-                disabled={cancelling}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold"
-              >
-                {cancelling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Cancelling...
-                  </>
-                ) : (
-                  'Confirm Cancellation'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <XCircle className="h-4 w-4" />
+                Cancel subscription
+              </button>
+            ) : (
+              <p className="text-sm text-neutral-500">
+                {subscription.cancel_at_period_end
+                  ? "Auto-renewal is off. You still have access for the remainder of this billing period."
+                  : "This subscription is not active for cancellation from here."}
+              </p>
+            )}
+          </footer>
+        </div>
+      )}
+
+      <Dialog
+        open={isCancelDialogOpen}
+        onOpenChange={(open) => {
+          setIsCancelDialogOpen(open)
+          if (!open) setCancelling(false)
+        }}
+      >
+        <DialogContent className="max-w-md gap-0 overflow-hidden border-2 border-black bg-white p-0 shadow-none sm:rounded-none [&>button]:hidden">
+          <DialogHeader className="flex flex-row items-start justify-between gap-4 border-b border-neutral-200 px-6 py-5 text-left">
+            <DialogTitle className="font-display text-xl font-bold tracking-tight text-black">
+              Cancel subscription
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsCancelDialogOpen(false)}
+              disabled={cancelling}
+              className="shrink-0 rounded-full border border-neutral-300 p-1 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-black disabled:opacity-50"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogHeader>
+          <div className="px-6 py-5">
+            <p className="text-sm text-neutral-500">
+              Do you really want to cancel? You&apos;ll keep access until the
+              end of your current billing period.
+            </p>
+          </div>
+          <div className="flex items-center justify-end gap-3 border-t border-neutral-200 px-6 py-4">
+            <button
+              type="button"
+              onClick={() => setIsCancelDialogOpen(false)}
+              disabled={cancelling}
+              className="border border-black bg-white px-5 py-2.5 font-display text-sm font-semibold text-black transition-colors hover:bg-neutral-50 disabled:opacity-50"
+            >
+              Keep plan
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCancel}
+              disabled={cancelling}
+              className="inline-flex items-center gap-2 border border-black bg-black px-5 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {cancelling ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cancelling…
+                </>
+              ) : (
+                "Yes, cancel"
+              )}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-

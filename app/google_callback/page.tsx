@@ -28,16 +28,20 @@ export default function GoogleCallbackPage() {
       const fromLandingPage = sessionStorage.getItem('FromLandingPage') === 'true';
       const courseIdFromLandingPage = sessionStorage.getItem('CourseIdFromLandingPage') || '';
 
-      // Helper function to redirect based on landing page status
-      const redirectAfterAuth = () => {
+      // Helper function to redirect based on landing page / subscription status
+      const redirectAfterAuth = async () => {
         if (fromLandingPage && courseIdFromLandingPage) {
           sessionStorage.setItem('purchaseModalOpen', "true");
           router.push(`/main/courses/${courseIdFromLandingPage}`);
-          
-        } else {
-          sessionStorage.setItem('purchaseModalOpen', "false");
-          router.push('/dashboard/');
+          return
         }
+
+        sessionStorage.setItem('purchaseModalOpen', "false");
+        const { fetchAndStoreSubscription, getPostLoginPath } = await import(
+          '@/lib/payment-access'
+        )
+        const isActive = await fetchAndStoreSubscription()
+        router.push(getPostLoginPath(isActive))
       };
 
       try {
@@ -80,17 +84,19 @@ export default function GoogleCallbackPage() {
               sessionStorage.setItem('email', userData.email || '');
               sessionStorage.setItem('id', userData.id?.toString() || '');
               sessionStorage.setItem('name', userData.name || '');
+              const { persistUserPaymentFields } = await import('@/lib/payment-access')
+              persistUserPaymentFields(userData)
               
-              redirectAfterAuth();
+              await redirectAfterAuth();
             } else {
               console.warn('Failed to fetch user data, but login was successful');
               // Still proceed with login even if user data fetch fails
-              redirectAfterAuth();
+              await redirectAfterAuth();
             }
           } catch (userErr) {
             console.warn('Error fetching user data:', userErr);
             // Still proceed with login even if user data fetch fails
-            redirectAfterAuth();
+            await redirectAfterAuth();
           }
         } else {
           console.error('OAuth authentication failed:', data);

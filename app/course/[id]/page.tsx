@@ -1,12 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronUp, Play, Clock, FileStack } from "lucide-react"
+import { ChevronDown, ChevronUp, Play, Clock, FileStack, Lock } from "lucide-react"
 import Image from "next/image"
 import { Megaphone } from "lucide-react";
 import Access from "@/components/dashboardItems/access";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import FlashcardsTab from "@/components/courseTabs/FlashcardsTab";
+import ExamPracticeTab from "@/components/courseTabs/ExamPracticeTab";
+import MockExamsTab from "@/components/courseTabs/MockExamsTab";
+import AiAssistantTab from "@/components/courseTabs/AiAssistantTab";
 
 // API data interfaces
 interface SubTopic {
@@ -45,7 +49,9 @@ export default function CoursePage() {
   const [courseData, setCourseData] = useState<CourseDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<"about" | "announcement">("about")
+  const [activeTab, setActiveTab] = useState<
+    "about" | "announcement" | "flashcards" | "exam-practice" | "mock-exams" | "ai-assistant"
+  >("about")
   const [expandedChapter, setExpandedChapter] = useState<number | null>(0)
 
   useEffect(() => {
@@ -189,7 +195,7 @@ export default function CoursePage() {
         </div>
 
         <div className="mb-6">
-          <div className="flex space-x-2 mb-4">
+          <div className="flex space-x-2 mb-4 flex-wrap gap-y-2">
             <button
               onClick={() => setActiveTab("about")}
               className={`px-4 text-xs py-2 rounded-mid ${
@@ -205,6 +211,38 @@ export default function CoursePage() {
               }`}
             >
               <p className="font-bold text-xs">Announcement</p>
+            </button>
+            <button
+              onClick={() => setActiveTab("flashcards")}
+              className={`px-4 text-xs py-2 rounded-md ${
+                activeTab === "flashcards" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
+              }`}
+            >
+              <p className="font-bold text-xs">Flashcards</p>
+            </button>
+            {/* <button
+              onClick={() => setActiveTab("exam-practice")}
+              className={`px-4 text-xs py-2 rounded-md ${
+                activeTab === "exam-practice" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
+              }`}
+            >
+              <p className="font-bold text-xs">Exam Practice</p>
+            </button> */}
+            <button
+              onClick={() => setActiveTab("mock-exams")}
+              className={`px-4 text-xs py-2 rounded-md ${
+                activeTab === "mock-exams" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
+              }`}
+            >
+              <p className="font-bold text-xs">Mock Exams</p>
+            </button>
+            <button
+              onClick={() => setActiveTab("ai-assistant")}
+              className={`px-4 text-xs py-2 rounded-md ${
+                activeTab === "ai-assistant" ? "bg-xcolor text-white" : "bg-[#f0f0ff]  text-xcolor"
+              }`}
+            >
+              <p className="font-bold text-xs">AI Assistant</p>
             </button>
           </div>
 
@@ -265,11 +303,32 @@ export default function CoursePage() {
               </div>
             </div>
           )}
+
+          {activeTab === "flashcards" && <FlashcardsTab />}
+
+          {activeTab === "exam-practice" && <ExamPracticeTab />}
+
+          {activeTab === "mock-exams" && <MockExamsTab />}
+
+          {activeTab === "ai-assistant" && <AiAssistantTab />}
         </div>
       </div>
 
-      <div className="w-full mb-10 md:w-96 py-4 border-2 dark:border-gray-800 border-gray-200">
-        <div className=" rounded-lg shadow-sm p-4">
+      <div className="w-full mb-10 md:w-96 md:self-start h-fit space-y-3">
+        <div className="py-4">
+          <div className="px-4 flex items-center justify-end gap-8">
+            {/* <button className="text-sm font-semibold text-xcolor hover:opacity-80 transition-opacity">
+              Share
+            </button> */}
+            <button className="px-3 py-2 text-sm font-semibold text-white bg-xcolor rounded-md hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-2 rounded-[5px]">
+              <Lock className="w-3 h-3" />
+              Enroll Now
+            </button>
+          </div>
+        </div>
+
+        <div className="py-4 border-2 dark:border-gray-800 border-gray-200 rounded-lg">
+          <div className=" rounded-lg shadow-sm p-4">
           <h2 className="font-bold text-md mb-4">Course Content & Chapters</h2>
 
           <div className="space-y-2">
@@ -322,6 +381,7 @@ export default function CoursePage() {
               />
             </svg>
           </Link> */}
+          </div>
         </div>
       </div>
     </div>

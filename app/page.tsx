@@ -1,63 +1,43 @@
-
 "use client"
 import Navbar from "@/components/screens/Navbar"
 import Hero from "@/components/screens/hero"
-import { CustomButton } from "@/components/pages/CustomButton"
-import { Highlight } from "@/components/pages/Highlight"
 import Footer from "@/components/screens/Footer"
-import CourseShowcase from "@/components/screens/CourseCard"
-import { HoverCard } from "@/components/pages/HoverCard"
-import Accords from "@/components/screens/Accords"
-import Qouatation from "@/components/screens/Qouatation"
-import Blogs from "@/components/screens/Blogs"
-import Owner from "@/components/screens/owner"
 import Courses from "@/components/screens/courses"
-import CoursesHeading from "@/components/screens/coursesHeading"
-import Image from "next/image"
-import Lottie from 'lottie-react';
-import { useEffect, useState } from 'react';
+import StripSlider from "@/components/screens/StripSlider"
+import Features from "@/components/screens/Features"
+import HowItWorks from "@/components/screens/HowItWorks"
+import Testimonials from "@/components/screens/Testimonials"
+import BlogSection from "@/components/screens/BlogSection"
 
 export default function Home() {
-  const [animationData, setAnimationData] = useState(null);
-
-  useEffect(() => {
-    fetch('/elevateExams.json')
-      .then(response => response.json())
-      .then(data => setAnimationData(data))
-      .catch(error => console.error('Error loading animation:', error));
-  }, []);
-
   return (
-    <main className="">
-      <div className="sticky top-0 z-50"><Navbar /></div>
-      <div className="mt-10 lg:mt-44  lg:-translate-y-[150px]   w-full  justify-center items-center">
-      
-      {animationData && (
-        <Lottie
-          animationData={animationData}
-          className="h-[500px] "
-          loop={true}
-          autoplay={true}
-        />
-      )}
-                            
+    <main className="bg-white">
+      <div className="sticky top-0 z-50">
+        <Navbar />
       </div>
-      {/* <Hero /> */}
-     
-      
-      
+      <Hero />
 
+      <div className="mt-[80px]">
+        <StripSlider />
+      </div>
 
+      <div id="courses">
+        <Courses />
+      </div>
 
-      <CoursesHeading />
-      <Courses />
-      <CourseShowcase />
-      <Accords />
-      <Qouatation />
-      <Owner />
-      {/* <Blogs /> */}
+      <div id="features" className="scroll-mt-24">
+        <Features />
+      </div>
+
+      <HowItWorks />
+
+      <Testimonials />
+
+      <div id="blog">
+        <BlogSection />
+      </div>
+
       <Footer />
-
     </main>
   )
 }
